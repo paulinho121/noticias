@@ -576,16 +576,55 @@ serve(async (req) => {
   let feedItemId: string | null = null;
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error("Acesso negado: Token de autorização não encontrado.");
+    
     const body = await req.json();
     feedItemId = body.feedItemId;
     const customImagePrompt: string | null = body.customImagePrompt || null;
     const customSourceImageB64: string | null = body.customSourceImageB64 || null;
-    const onlyImage: boolean = !!body.onlyImage; // Se true, pula reescrita de texto e gera só a imagem
+    const onlyImage: boolean = !!body.onlyImage;
     if (!feedItemId) throw new Error("feedItemId is required");
 
-    // 1. Fetch Item and Settings
+    // 1. Fetch Item and Verify Ownership (IDOR Protection)
     const { data: item, error: itemErr } = await supabase.from('feed_items').select('*, feeds(*)').eq('id', feedItemId).single();
-    if (itemErr || !item) throw new Error(`Item not found: ${itemErr?.message}`);
+    if (itemErr || !item) throw new Error(`Item não encontrado: ${itemErr?.message}`);
+
+    // VALIDAR TOKEN E PROPRIEDADE
+    const userClient = createClient(supabaseUrl, authHeader.replace('Bearer ', ''));
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    
+    let isMaster = false;
+    
+    if (authError || !user) {
+        // Se for uma chamada do sistema (Ex: cron worker), podemos permitir se o token for a service key
+        // Mas para chamadas via browser/UI, validamos o usuário
+        if (authHeader !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`) {
+            throw new Error("Sessão inválida ou expirada. Por favor, faça login novamente.");
+        }
+        isMaster = true; // Chamada de sistema é tratada como master para fins de bypass de billing (ou podíamos checar créditos da org)
+    } else {
+        // Verificar se o usuário pertence à mesma organização do item
+        const { data: orgMember } = await supabase
+            .from('organization_members')
+            .select('organization_id')
+            .eq('user_id', user.id)
+            .eq('organization_id', item.organization_id)
+            .maybeSingle();
+
+        // Verificar se é Master Admin (Hardcoded whitelist)
+        isMaster = [
+            'paulofernandoautomacao@gmail.com',
+            'jotavmkt@gmail.com',
+            'labwpplus@gmail.com',
+            'labnews.pro@gmail.com',
+            'admin@labnews.pro'
+        ].includes(user.email || '');
+
+        if (!orgMember && !isMaster) {
+            throw new Error("Acesso negado: Você não tem permissão para editar este conteúdo.");
+        }
+    }
 
     await supabase.from('feed_items').update({ status: 'processing' }).eq('id', feedItemId);
 
@@ -622,6 +661,19 @@ serve(async (req) => {
       hasUserOpenAI: !!userOpenAI,
       hasUserGemini: !!userGemini
     };
+
+    // 3. Billing & Access Control (Cost Isolation)
+    const { data: org } = await supabase.from('organizations').select('*').eq('id', item.organization_id).single();
+    const isFreeTrial = org?.subscription_plan === 'free_trial' || !org?.subscription_plan;
+    const trialExpired = org?.trial_ends_at && new Date(org.trial_ends_at) < new Date();
+    const hasOwnKeys = !!userGemini || !!userOpenAI;
+    
+    // Se o trial expirou E o usuário não tem chaves próprias, bloqueamos o uso das chaves do sistema
+    if (isFreeTrial && trialExpired && !hasOwnKeys && !isMaster) {
+        const errorMsg = "Seu período de teste expirou. Para continuar usando o motor do sistema, assine um plano. Ou adicione suas próprias chaves de API (Google Gemini/OpenAI) nas configurações.";
+        if (logId) await supabase.from('logs').update({ status: 'error', message: `Acesso Bloqueado: ${errorMsg}` }).eq('id', logId);
+        throw new Error(errorMsg);
+    }
 
     const { data: wl } = await supabase.from('white_label_settings').select('*').eq('organization_id', item.organization_id).maybeSingle();
 
@@ -707,32 +759,46 @@ serve(async (req) => {
     try {
       // 1. Strip markdown code blocks and trim
       let raw = aiText.replace(/```json|```/g, '').trim();
-      // 2. Remove ASCII control chars that break JSON parsers (newlines inside strings etc.)
-      raw = raw.replace(/[\u0000-\u001F\u007F]/g, (c) =>
-        c === '\n' ? '\\n' : c === '\r' ? '\\r' : c === '\t' ? '\\t' : ''
-      );
-      // 3. Try to extract just the JSON object (from first '{' to last '}')
+      
+      // 2. Remove non-JSON characters before the first { and after the last }
       const firstBrace = raw.indexOf('{');
       const lastBrace = raw.lastIndexOf('}');
       if (firstBrace !== -1 && lastBrace !== -1) {
         raw = raw.slice(firstBrace, lastBrace + 1);
       }
-      rewritten = JSON.parse(raw);
+
+      // 3. Handle common AI issues: newlines in strings, unescaped quotes
+      // This is a complex step, we try standard parse first
+      try {
+        rewritten = JSON.parse(raw);
+      } catch (e) {
+        // If it fails, try a more aggressive cleanup
+        const sanitized = raw
+          .replace(/\\n/g, "\\n")
+          .replace(/\\'/g, "'")
+          .replace(/[\u0000-\u0019]+/g, "");
+        rewritten = JSON.parse(sanitized);
+      }
     } catch (parseErr: any) {
       console.error('[JSON Parse] Primary parse failed:', parseErr.message, '| Trying key-by-key extraction...');
+      
       // Fallback: extract individual fields with regex
       const extract = (key: string) => {
-        const m = aiText.match(new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
-        return m ? m[1].replace(/\\n/g, '\n') : '';
+        const regex = new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, 'i');
+        const m = aiText.match(regex);
+        return m ? m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '';
       };
+      
       const extractArr = (key: string) => {
-        const m = aiText.match(new RegExp(`"${key}"\\s*:\\s*\\[([^\\]]*)\\]`));
+        const regex = new RegExp(`"${key}"\\s*:\\s*\\[([^\\]]*)\\]`, 'i');
+        const m = aiText.match(regex);
         if (!m) return [];
-        return m[1].split(',').map((s) => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+        return m[1].split(',').map((s) => s.trim().replace(/^"|"$/g, '').replace(/\\"/g, '"')).filter(Boolean);
       };
+
       rewritten = {
         title: extract('title') || item.source_title,
-        slug: extract('slug'),
+        slug: extract('slug') || (extract('title') ? extract('title').toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-') : ''),
         content: extract('content') || item.source_content,
         meta_description: extract('meta_description'),
         social_summary: extract('social_summary'),

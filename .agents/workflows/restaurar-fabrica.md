@@ -4,7 +4,7 @@ description: Como restaurar o sistema para a Versão de Fábrica
 
 Este workflow restaura o código exatamente para o estado marcado como "Versão de Fábrica" (`versao-fabrica`).
 
-**AVISO:** Isso irá descartar qualquer alteração local não salva e resetar o código para o commit `6f31e7a`.
+**AVISO:** Isso irá descartar qualquer alteração local não salva e resetar o código para o commit `9fa87b4` (Versão Segura e Auditada).
 
 ### Passos para restaurar:
 

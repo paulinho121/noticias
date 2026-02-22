@@ -12,23 +12,53 @@ serve(async (req) => {
   let feedId: string | null = null;
   
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error("Acesso negado: Token de autorização não encontrado.");
+    
     const body = await req.json().catch(() => ({}));
     feedId = body.feedId;
     
     if (!feedId) throw new Error('feedId is required');
 
-    // Configuração com Fallback Automático para o seu projeto específico
+    // Configuração com Fallback Automático
     const PROJECT_REF = "aozbgeguelpphxhptrwy";
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || `https://${PROJECT_REF}.supabase.co`;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('MASTER_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
-
-    if (!supabaseKey) throw new Error('Credenciais de acesso não encontradas.');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('MASTER_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. Buscar dados do Feed
     const { data: feed, error: feedError } = await supabase.from('feeds').select('*').eq('id', feedId).single();
     if (feedError || !feed) throw new Error(`Feed não encontrado: ${feedError?.message}`);
+
+    // VALIDAR TOKEN E PROPRIEDADE (IDOR Protection)
+    const userClient = createClient(supabaseUrl, authHeader.replace('Bearer ', ''));
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+
+    if (authError || !user) {
+        if (authHeader !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`) {
+            throw new Error("Sessão inválida ou expirada.");
+        }
+    } else {
+        const { data: orgMember } = await supabase
+            .from('organization_members')
+            .select('organization_id')
+            .eq('user_id', user.id)
+            .eq('organization_id', feed.organization_id)
+            .maybeSingle();
+
+        const isMaster = [
+            'paulofernandoautomacao@gmail.com',
+            'jotavmkt@gmail.com',
+            'labwpplus@gmail.com',
+            'labnews.pro@gmail.com',
+            'admin@labnews.pro'
+        ].includes(user.email || '');
+
+        if (!orgMember && !isMaster) {
+            throw new Error("Acesso negado: Você não tem permissão para processar este feed.");
+        }
+    }
 
     console.log(`[NuclearEngine] Iniciando busca para: ${feed.name}`);
 

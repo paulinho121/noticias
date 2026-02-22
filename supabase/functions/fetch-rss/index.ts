@@ -289,6 +289,15 @@ serve(async (req) => {
 
   try {
     const { feedId, feedUrl } = await req.json();
+    
+    // SSRF Protection: Validate the feed URL before fetching
+    if (!isValidPublicUrl(feedUrl)) {
+      console.error(`[FetchRSS] Bloqueado: URL inválida ou interna: ${feedUrl}`);
+      return new Response(
+        JSON.stringify({ success: false, error: 'URL do feed é inválida ou proibida por motivos de segurança.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!feedId || !feedUrl) {
       return new Response(
