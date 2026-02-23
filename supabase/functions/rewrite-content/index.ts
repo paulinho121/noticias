@@ -258,31 +258,26 @@ Regras ABSOLUTAMENTE CRÍTICAS para o seu prompt em inglês:
     }
   }
 
-  async generateImage(payload: { prompt: string, sourceImageUrl?: string, sourceImageB64?: string, articleContext?: string, keys: { gemini?: string, openai?: string, hasUserOpenAI?: boolean, hasUserGemini?: boolean }, logId?: string, feedItemId: string, orgSettings?: any }) {
-    const { prompt, sourceImageUrl, sourceImageB64, articleContext, keys, logId, feedItemId, orgSettings } = payload;
+  async generateImage(payload: { prompt: string, sourceImageUrl?: string, sourceImageB64?: string, articleContext?: string, keys: { gemini?: string, openai?: string, hasUserOpenAI?: boolean, hasUserGemini?: boolean }, logId?: string, feedItemId: string, orgSettings?: any, imageEngine?: string }) {
+    const { prompt, sourceImageUrl, sourceImageB64, articleContext, keys, logId, feedItemId, orgSettings, imageEngine } = payload;
     
-    // Priority based on Image Provider Settings
+    // Priority based on Feed Image Engine or Organization Settings
     let imgProviders: string[] = [];
+    const effectiveProvider = imageEngine || orgSettings?.image_provider;
 
-    if (orgSettings?.image_provider === 'google_gemini') {
-      imgProviders = ['gemini'];                           // Imagen (sem edição de imagem)
-    } else if (orgSettings?.image_provider === 'dalle') {
-      imgProviders = ['openai'];                           // gpt-image-1 puro
-    } else if (orgSettings?.image_provider === 'nano_banana') {
-      imgProviders = ['nano_banana', 'openai', 'gemini']; // Nano Banana > DALL-E > Imagen
+    if (effectiveProvider === 'scraped') {
+      return null; // Don't generate anything, use original image
+    } else if (effectiveProvider === 'google_gemini') {
+      imgProviders = ['gemini'];                           // Imagen puro
+    } else if (effectiveProvider === 'dalle') {
+      imgProviders = ['openai'];                           // DALL-E 3 puro
+    } else if (effectiveProvider === 'gemini_2_5' || effectiveProvider === 'nano_banana') {
+      imgProviders = ['nano_banana', 'openai', 'gemini'];  // Gemini 2.5/2.5 Flash Image > DALL-E > Imagen
     } else {
       // --- PADRÃO INTELIGENTE: usar o melhor motor disponível automaticamente ---
-      // 1. Nano Banana (gemini-2.5-flash-image) — melhor para edição de imagens existentes
       if (keys.gemini) imgProviders.push('nano_banana');
-      // 2. OpenAI gpt-image-1 — excelente editor quando tem chave OpenAI
       if (keys.openai) imgProviders.push('openai');
-      // 3. Imagen (fallback Gemini puro, geração sem referência)
       if (keys.gemini) imgProviders.push('gemini');
-      // Garantia: se não há nada, usa o que tiver
-      if (imgProviders.length === 0) {
-        if (keys.gemini) imgProviders = ['nano_banana', 'gemini'];
-        else if (keys.openai) imgProviders = ['openai'];
-      }
     }
 
     // --- GEMINI VISION: Analyze source image to build a rich, accurate prompt ---
@@ -694,7 +689,8 @@ serve(async (req) => {
         keys,
         logId,
         feedItemId,
-        orgSettings: wl
+        orgSettings: wl,
+        imageEngine: item.feeds?.image_engine
       });
 
       // Salva apenas a imagem gerada
@@ -838,7 +834,8 @@ serve(async (req) => {
         keys,
         logId,
         feedItemId,
-        orgSettings: wl
+        orgSettings: wl,
+        imageEngine: item.feeds?.image_engine
       });
     }
 
