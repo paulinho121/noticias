@@ -26,6 +26,7 @@ dist-ssr
 !/package.json
 !/package-lock.json
 !/components.json
+!/vercel.json
 !/tsconfig*.json
 /*.md
 !/README.md
