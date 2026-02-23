@@ -126,22 +126,39 @@ serve(async (req) => {
       aiContent = data.choices[0].message.content;
     } else if (GEMINI_API_KEY) {
       console.log(`[Generate] Using Gemini for: ${keywords}`);
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `${systemPrompt}\n\nPalavras-chave: ${keywords}` }] }],
-          generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
-        }),
-      });
+      
+      const models = ['gemini-1.5-flash', 'gemini-2.0-flash-exp', 'gemini-1.5-pro'];
+      let lastErr = "";
+      
+      for (const model of models) {
+        try {
+          console.log(`[Generate] Trying Gemini model: ${model}`);
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `${systemPrompt}\n\nPalavras-chave: ${keywords}` }] }],
+              generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
+            }),
+          });
 
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(`Erro Gemini: ${response.status} - ${err}`);
+          if (!response.ok) {
+            const err = await response.text();
+            lastErr = `Erro Gemini (${model}): ${response.status} - ${err}`;
+            console.warn(lastErr);
+            continue;
+          }
+
+          const data = await response.json();
+          aiContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (aiContent) break;
+        } catch (e: any) {
+          lastErr = `Falha Gemini (${model}): ${e.message}`;
+          console.warn(lastErr);
+        }
       }
 
-      const data = await response.json();
-      aiContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!aiContent) throw new Error(`Todas as tentativas com Gemini falharam. Último erro: ${lastErr}`);
     } else if (OPENAI_API_KEY) {
       console.log(`[Generate] Using OpenAI for: ${keywords}`);
       const response = await fetch('https://api.openai.com/v1/chat/completions', {

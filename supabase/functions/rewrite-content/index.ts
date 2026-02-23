@@ -99,7 +99,7 @@ class AIGateway {
 
   constructor(supabase: any) {
     this.supabase = supabase;
-    this.gems = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash-lite'];
+    this.gems = ['gemini-1.5-flash', 'gemini-2.0-flash-exp', 'gemini-1.5-pro'];
     this.openais = ['gpt-4o', 'gpt-4o-mini'];
   }
 
@@ -240,7 +240,7 @@ Regras ABSOLUTAMENTE CRÍTICAS para o seu prompt em inglês:
       };
 
       const resp = await fetchWithTimeout(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) },
         30000
       );
