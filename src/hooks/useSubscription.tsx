@@ -9,6 +9,7 @@ interface SubscriptionData {
     days_left: number;
     is_expired: boolean;
     organization_id: string | null;
+    is_master_admin: boolean;
 }
 
 interface SubscriptionContextType {
@@ -59,8 +60,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                         trial_ends_at: orgData.trial_ends_at,
                         days_left: daysLeft,
                         is_expired: isExpired,
-                        organization_id: memberData.organization_id
+                        organization_id: memberData.organization_id,
+                        is_master_admin: false // Default will be updated below
                     });
+
+                    // 3. Verificar se é Master Admin
+                    const { data: isMaster } = await (supabase as any).rpc('is_master_admin');
+                    if (isMaster) {
+                        setSubscription(prev => prev ? { ...prev, is_master_admin: true } : null);
+                    }
                 }
             }
         } catch (error) {

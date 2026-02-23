@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWhiteLabel } from '@/hooks/useWhiteLabel';
 import { useIPGuard } from '@/hooks/useIPGuard';
+import { TrialGuard } from '../auth/TrialGuard';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useLocation } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -14,6 +18,12 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { settings } = useWhiteLabel();
+  const { subscription } = useSubscription();
+  const location = useLocation();
+
+  const isExpired = subscription?.is_expired && subscription?.plan_type === 'free_trial' && !subscription?.is_master_admin;
+  const isBillingTab = location.search.includes('tab=billing');
+  const isSettingsPage = location.pathname === '/settings';
 
   // Proteção de Propriedade Intelectual (Dashboard)
   useIPGuard(true);
@@ -50,7 +60,13 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}
       >
         <div className="flex-1 w-full max-w-[1600px] mx-auto overflow-x-hidden">
-          {children}
+          {isExpired && !isBillingTab ? (
+            <TrialGuard>
+              {children}
+            </TrialGuard>
+          ) : (
+            children
+          )}
         </div>
 
         {/* Custom Footer */}

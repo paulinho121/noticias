@@ -17,7 +17,8 @@ import {
   CreditCard,
   LifeBuoy,
   Crown,
-  BarChart3
+  BarChart3,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,46 +58,14 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<any>(null);
-  const [isMaster, setIsMaster] = useState(false);
   const { settings } = useWhiteLabel();
   const { subscription } = useSubscription();
+
+  const isMaster = subscription?.is_master_admin;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user);
-      if (session?.user) {
-        // Check multiple sources for master status (matching DB is_master_admin logic)
-        const checkMaster = async () => {
-          try {
-            // 1. Direct check using DB RPC for maximum reliability
-            const { data: masterStatus } = await (supabase as any).rpc('is_master_admin');
-            if (masterStatus) {
-              setIsMaster(true);
-              return;
-            }
-
-            // 2. Fallback for hardcoded admins as a fail-safe measure
-            const adminEmails = [
-              'paulofernandoautomacao@gmail.com',
-              'jotavmkt@gmail.com',
-              'labwpplus@gmail.com',
-              'labnews.pro@gmail.com'
-            ];
-
-            if (adminEmails.includes(session.user.email?.toLowerCase())) {
-              setIsMaster(true);
-            }
-          } catch (error) {
-            console.error('Error checking master status:', error);
-            // Even on error, allow specific admins
-            if (['paulofernandoautomacao@gmail.com', 'labwpplus@gmail.com'].includes(session.user.email?.toLowerCase())) {
-              setIsMaster(true);
-            }
-          }
-        };
-
-        checkMaster();
-      }
     });
   }, []);
 
@@ -157,18 +126,41 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
           ...(isMaster ? [{ name: 'Founder Console', href: '/master', icon: BarChart3 }] : [])
         ].map((item) => {
           const isActive = location.pathname === item.href;
+          const isExpired = subscription?.is_expired && subscription?.plan_type === 'free_trial';
+          const isBillingItem = item.href === '/settings?tab=billing';
+          const targetHref = isExpired ? '/settings?tab=billing' : item.href;
+
           return (
             <Link
               key={item.name}
-              to={item.href}
+              to={targetHref}
+              onClick={(e) => {
+                if (isExpired && !isBillingItem) {
+                  // Keep the link but ensure it goes to billing
+                  // The 'to' prop already handles this, but we can add a toast or similar
+                }
+              }}
               className={cn(
                 "nav-link",
                 isActive && "active",
-                (collapsed && !mobile) && "justify-center px-0 h-10 w-10 mx-auto"
+                (collapsed && !mobile) && "justify-center px-0 h-10 w-10 mx-auto",
+                isExpired && !isBillingItem && "opacity-80"
               )}
             >
-              <item.icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground/80")} />
-              {(!collapsed || mobile) && <span>{item.name}</span>}
+              <div className="relative">
+                <item.icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground/80")} />
+                {isExpired && !isBillingItem && (
+                  <div className="absolute -top-1.5 -right-1.5 bg-background rounded-full p-0.5 shadow-sm border border-border/50">
+                    <Lock className="w-2 h-2 text-amber-500" />
+                  </div>
+                )}
+              </div>
+              {(!collapsed || mobile) && (
+                <div className="flex items-center justify-between flex-1 min-w-0">
+                  <span>{item.name}</span>
+                  {isExpired && !isBillingItem && <Lock className="w-3 h-3 text-muted-foreground/40 ml-2" />}
+                </div>
+              )}
             </Link>
           );
         })}

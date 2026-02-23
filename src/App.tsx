@@ -98,31 +98,31 @@ const AppContent = () => {
       <Routes>
         <Route
           path="/"
-          element={session ? <TrialGuard><Index /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <Index /> : <Navigate to="/login" />}
         />
         <Route
           path="/feeds"
-          element={session ? <TrialGuard><Feeds /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <Feeds /> : <Navigate to="/login" />}
         />
         <Route
           path="/schedules"
-          element={session ? <TrialGuard><Schedules /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <Schedules /> : <Navigate to="/login" />}
         />
         <Route
           path="/logs"
-          element={session ? <TrialGuard><Logs /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <Logs /> : <Navigate to="/login" />}
         />
         <Route
           path="/review"
-          element={session ? <TrialGuard><Review /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <Review /> : <Navigate to="/login" />}
         />
         <Route
           path="/settings"
-          element={session ? <TrialGuard><Settings /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <Settings /> : <Navigate to="/login" />}
         />
         <Route
           path="/api-docs"
-          element={session ? <TrialGuard><ApiDocs /></TrialGuard> : <Navigate to="/login" />}
+          element={session ? <ApiDocs /> : <Navigate to="/login" />}
         />
         <Route
           path="/master"
