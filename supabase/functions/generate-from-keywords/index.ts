@@ -69,16 +69,30 @@ serve(async (req) => {
       throw new Error('Nenhuma chave de API configurada (OpenAI ou Gemini). Configure em Configurações > API.');
     }
 
-    const systemPrompt = `Você é um editor de conteúdo criativo. Com base nas palavras-chave fornecidas pelo usuário, gere 1 ideia de postagem de alta qualidade.
-    
-    Se as palavras-chave parecerem relacionadas a RECEITAS, gere uma receita completa (Título e uma breve descrição do prato).
-    Se forem relacionadas a MÚSICA/CIFRAS, gere um post sobre uma música específica ou dica de teoria/instrumentos.
-    Caso contrário, gere um artigo informativo.
+    const systemPrompt = `Você é um Especialista em Marketing de Conteúdo e Editor Sênior. Sua tarefa é criar ideias de artigos de alta performance e nível PROFISSIONAL com base nas palavras-chave fornecidas.
+
+    DETECÇÃO DE DOMÍNIO:
+    1. Se as palavras-chave forem sobre CULINÁRIA/RECEITAS: Assuma a persona de um Chef de Cozinha renomado. Crie um artigo que inclua: Introdução envolvente, Ingredientes organizados, Modo de Preparo detalhado e uma "Dica do Chef" para um toque profissional.
+    2. Se as palavras-chave forem sobre TECNOLOGIA/IA: Assuma a persona de um Analista de Sistemas/Tech Lead. Foque em tendências, impactos e aplicabilidade técnica.
+    3. Se as palavras-chave forem sobre NEGÓCIOS/MARKETING: Assuma a persona de um Consultor de Estratégia. Foque em ROI, conversão e tendências de mercado.
+    4. Caso contrário: Assuma a persona de um Jornalista Especialista no tema.
+
+    REGRAS DE OURO:
+    - O conteúdo deve ser rico, útil e pronto para publicação.
+    - Use formatação HTML básica (<b>, <i>, <ul>, <li>) para estruturar o texto.
+    - O tom deve ser EXPERT, evitando clichês e gerando valor real para o leitor.
+    - Gere também metadados SEO (slug, meta_description, tags).
 
     RETORNE APENAS um JSON válido seguindo esta estrutura:
     {
       "items": [
-        { "title": "Título sugerido", "content": "Descrição ou introdução breve do tema" }
+        { 
+          "title": "Título Profissional e Chamativo", 
+          "content": "Conteúdo completo do artigo em HTML (mínimo 300 palavras)", 
+          "meta_description": "Resumo para SEO",
+          "slug": "url-do-artigo",
+          "tags": ["tag1", "tag2"]
+        }
       ]
     }`;
 
@@ -99,7 +113,6 @@ serve(async (req) => {
             { role: 'user', content: `Palavras-chave: ${keywords}` }
           ],
           temperature: 0.7,
-          to_json: true,
           response_format: { type: "json_object" }
         }),
       });
@@ -183,8 +196,12 @@ serve(async (req) => {
     const feedItems = items.map((item: any) => ({
       feed_id: feedId,
       user_id: userId,
+      organization_id: feed.organization_id,
       source_title: item.title,
       source_content: item.content,
+      slug: item.slug,
+      meta_description: item.meta_description,
+      tags: item.tags,
       status: 'pending',
       source_url: `https://creative-generation/${Date.now()}/${Math.random().toString(36).substring(7)}`,
     }));

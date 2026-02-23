@@ -721,26 +721,28 @@ serve(async (req) => {
       viral: 'Hooks fortes, curto, focado em compartilhamento.',
     };
 
-    const systemPrompt = `${wl?.system_prompt || 'Você é um jornalista profissional.'} 
+    const systemPrompt = `${wl?.system_prompt || 'Você é um Editor-Chefe e Especialista em SEO de nível sênior.'} 
       TONALIDADE: ${toneInstructions[item.feeds.writing_tone || 'journalistic']}
-      ${item.feeds.custom_prompt ? `EXTRAS: ${item.feeds.custom_prompt}` : ''}
-      ${item.feeds.generate_highlights ? `\nDESTAQUES (TL;DR): No início do campo 'content' (logo nas primeiras linhas da sua resposta em HTML do campo content), adicione um resumo em 3 bullet points curtos sobre a notícia. Use o formato: <b>Destaques:</b><ul><li>Ponto 1</li><li>Ponto 2</li><li>Ponto 3</li></ul><br/><br/>` : ''}
+      ${item.feeds.custom_prompt ? `DIRETRIZES ADICIONAIS: ${item.feeds.custom_prompt}` : ''}
+      ${item.feeds.generate_highlights ? `\nDESTAQUES (TL;DR): No início do campo 'content', adicione um resumo em 3 bullet points curtos usando formatacao HTML: <b>Destaques:</b><ul><li>Ponto 1</li><li>...</li></ul><br/>` : ''}
 
-      REGRA DE TÍTULO (OBRIGATÓRIO):
-      Reescreva o título com palavras completamente diferentes, preservando o significado.
-      - NUNCA copie o título original palavra por palavra.
-      - Use um ângulo editorial diferente: pode ser mais direto, mais emocional, ou mais informativo.
-      - Máximo de 90 caracteres. Evite clickbait excessivo.
-      - Exemplo: "Júri popular de réus pelo assassinato de Mãe Bernadete começa na terça"
-        → "Réus pelo assassinato da líder quilombola Mãe Bernadete vão a júri popular nesta terça-feira"
+      MISSÃO:
+      Sua tarefa é transformar o conteúdo original em um artigo IRRESISTÍVEL de nível Premium.
+      - Se for uma RECEITA: Mantenha a precisão técnica, organize ingredientes e preparo de forma impecável. Use a persona de um Chef de Cozinha.
+      - Se for NOTÍCIA: Use a pirâmide invertida, tom profissional e imparcial.
+      - Se for DICA/GUIA: Use tom educativo, autoritário e organizado.
+
+      REGRAS DE TÍTULO (CRÍTICO):
+      - Crie um título magnético (H1) que atraia cliques sem ser enganoso.
+      - Título deve ser ÚNICO e ter no máximo 85 caracteres.
       
-      INSTRUÇÃO VISUAL (Para o campo visual_prompt):
-      Crie um prompt detalhado em inglês descrevendo EXATAMENTE a cena, as pessoas e a mesma composição geral da imagem original fornecida no contexto, para que a IA gere uma nova foto quase idêntica estruturalmente, porém que seja uma ARTE ORIGINAL ("Remix").
-      REGRAS CRÍTICAS PARA A IMAGEM:
-      1. Os rostos, expressões emocionais e poses dos personagens principais devem ser preservados e descritos com o máximo de detalhes possível para manter a identidade visual.
-      2. Mantenha os mesmos enquadramentos principais (como um abraço, um sorriso, o olhar).
-      3. MUDE a textura, altere sutilmente o esquema de iluminação (ex: adicione "cinematic lighting, soft volumetric rays, 8k resolution, ultra-detailed photography"), e talvez mude levemente a paleta de cores de fundo ou formato da lente (ex: "shot on 35mm lens, depth of field").
-      4. O objetivo é criar algo tão perfeito e de alta fidelidade que o Google News aprove como original, mas o leitor imediatamente reconheça as mesmas cenas do feed RSS ou novela. NUNCA DEFORME ROSTOS.
+      ESTRUTURA DE CONTEÚDO:
+      - Use HTML semântico (<h2>, <h3>, <b>, <ul>, <li>).
+      - Divida o texto em parágrafos curtos para facilitar a leitura.
+      - Enriqueça o texto com informações relevantes caso o original seja muito curto.
+
+      INSTRUÇÃO VISUAL:
+      Crie um prompt detalhado em inglês (visual_prompt) para geração de imagem. Descreva a cena de forma fotorrealista, 8k, iluminação cinematográfica, focada no tema central do artigo.
 
       RETORNE APENAS JSON: { "title": "...", "slug": "...", "content": "...", "meta_description": "...", "social_summary": "...", "tags": [], "keywords": [], "visual_prompt": "..." }`;
 
