@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AdminNotificationModal } from '../notifications/AdminNotificationModal';
 
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -27,6 +28,7 @@ export function Header({
   onSearchChange,
   searchValue: initialSearchValue = ""
 }: HeaderProps) {
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { subscription } = useSubscription();
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -138,7 +140,7 @@ export function Header({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.location.href = '/settings?tab=billing'}
+              onClick={() => navigate('/settings?tab=billing')}
               className="flex items-center gap-2 border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-600 transition-all font-bold h-9 group relative overflow-hidden active:scale-95 shrink-0"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />

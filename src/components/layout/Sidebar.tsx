@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Rss,
@@ -54,6 +54,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: SidebarProps) {
+  const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [isMaster, setIsMaster] = useState(false);
@@ -102,7 +103,7 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Até logo!');
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   return (
@@ -207,7 +208,7 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
               )}
 
               <button
-                onClick={() => window.location.href = '/settings?tab=billing'}
+                onClick={() => navigate('/settings?tab=billing')}
                 className="w-full py-2 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95"
               >
                 Assinar Agora

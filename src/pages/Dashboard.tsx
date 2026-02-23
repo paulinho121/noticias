@@ -15,11 +15,13 @@ import { Badge } from '@/components/ui/badge';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 import { feedsApi, schedulesApi, logsApi, feedItemsApi } from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { settings } = useWhiteLabel();
   // Queries
   const { data: feeds = [], isLoading: feedsLoading } = useQuery({
@@ -101,7 +103,7 @@ export default function Dashboard() {
         subtitle={settings.hero_subtitle || "Gerenciamento centralizado de automação e inteligência de conteúdo."}
         showAddButton
         addButtonText="Novo Projeto"
-        onAddClick={() => window.location.href = '/feeds'}
+        onAddClick={() => navigate('/feeds')}
       />
 
       <div className="p-3 md:p-8 space-y-4 md:space-y-8 animate-in fade-in duration-500">
