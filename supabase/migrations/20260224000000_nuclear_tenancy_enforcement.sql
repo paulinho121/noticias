@@ -27,16 +27,41 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 -- 2. Garantir que o Gatilho de Auto-Injeção existe
 CREATE OR REPLACE FUNCTION public.trg_enforce_tenant_isolation()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_user_org_id UUID;
 BEGIN
-  -- Se o usuário não for Master Admin, forçamos o organization_id dele
-  IF NOT public.is_master_admin() THEN
-    NEW.organization_id := public.get_my_organization_strict();
-    
-    -- Se ainda for nulo, o usuário não tem organização e não pode criar nada
-    IF NEW.organization_id IS NULL THEN
-      RAISE EXCEPTION 'Usuário não vinculado a nenhuma organização ativa.';
+  -- 1. Se for Master Admin, bypass total
+  IF public.is_master_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  -- 2. Tentar obter a organização do contexto atual
+  v_user_org_id := public.get_my_organization_strict();
+  
+  -- 3. Caso especial: Cadastro Inicial (Signup)
+  -- Durante o trigger AFTER INSERT em auth.users, auth.uid() pode estar instável
+  -- ou o mapeamento de organização ainda está sendo criado na mesma transação.
+  IF v_user_org_id IS NULL AND NEW.organization_id IS NOT NULL THEN
+    -- Se a ID da organização foi fornecida explicitamente (vinda de uma função SECURITY DEFINER como a de signup)
+    -- e não temos um usuário logado (contexto de criação), permitimos o fluxo.
+    IF auth.uid() IS NULL OR EXISTS (
+      SELECT 1 FROM public.organization_members 
+      WHERE user_id = auth.uid() AND organization_id = NEW.organization_id
+    ) THEN
+      RETURN NEW;
     END IF;
   END IF;
+
+  -- 4. Forçar isolamento para usuários comuns
+  IF v_user_org_id IS NOT NULL THEN
+    NEW.organization_id := v_user_org_id;
+  END IF;
+
+  -- 5. Validação de Segurança
+  IF NEW.organization_id IS NULL THEN
+    RAISE EXCEPTION 'Acesso Negado: Organização não identificada para este usuário.';
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
