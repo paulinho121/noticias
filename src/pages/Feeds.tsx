@@ -87,6 +87,7 @@ export default function Feeds() {
     credit_source: false,
     image_credit_text: '',
     image_engine: 'scraped' as 'scraped' | 'google_gemini' | 'dalle' | 'gemini_2_5',
+    enhance_scraped_image: false,
     generate_highlights: true,
     target_platform: 'wordpress' as 'wordpress' | 'blogger' | 'custom_api' | 'local',
     interval_minutes: 60,
@@ -155,6 +156,7 @@ export default function Feeds() {
         credit_source: newFeed.credit_source,
         image_credit_text: newFeed.image_credit_text || null,
         image_engine: newFeed.image_engine,
+        enhance_scraped_image: newFeed.enhance_scraped_image,
         generate_highlights: newFeed.generate_highlights,
         target_platform: newFeed.target_platform,
       });
@@ -215,6 +217,7 @@ export default function Feeds() {
       credit_source: false,
       image_credit_text: '',
       image_engine: 'scraped',
+      enhance_scraped_image: false,
       generate_highlights: true,
       target_platform: 'wordpress',
       interval_minutes: 60,
@@ -787,8 +790,8 @@ export default function Feeds() {
                     </div>
 
                     {newFeed.extract_images && (
-                      <div className="p-5 rounded-xl bg-muted/20 border border-border/40 animate-in fade-in slide-in-from-top-2 space-y-4">
-                        <div className="flex items-center justify-between">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center border border-border/60">
                               <MoreVertical className="w-4 h-4 text-muted-foreground" />
@@ -803,6 +806,7 @@ export default function Feeds() {
                             onCheckedChange={(checked) => setNewFeed(prev => ({ ...prev, credit_source: checked }))}
                           />
                         </div>
+
                         {newFeed.credit_source && (
                           <div className="animate-in fade-in zoom-in-95">
                             <Input
@@ -813,32 +817,50 @@ export default function Feeds() {
                             />
                           </div>
                         )}
+
+                        {newFeed.image_engine === 'scraped' && (
+                          <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                                <Sparkles className="w-4 h-4 text-orange-500" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">Melhorar Imagem Original</p>
+                                <p className="text-[10px] text-muted-foreground">Melhora qualidade, aplica zoom e anti-copyright</p>
+                              </div>
+                            </div>
+                            <Switch
+                              checked={newFeed.enhance_scraped_image}
+                              onCheckedChange={(checked) => setNewFeed(prev => ({ ...prev, enhance_scraped_image: checked }))}
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground/70">Frequência de Atualização</Label>
-                    <Select
-                      value={newFeed.interval_minutes.toString()}
-                      onValueChange={(v) => setNewFeed(prev => ({ ...prev, interval_minutes: parseInt(v) }))}
-                    >
-                      <SelectTrigger className="bg-muted/20 border-border/40 h-10">
-                        <SelectValue placeholder="Selecione o intervalo..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10">A cada 10 minutos</SelectItem>
-                        <SelectItem value="15">A cada 15 minutos</SelectItem>
-                        <SelectItem value="30">A cada 30 minutos</SelectItem>
-                        <SelectItem value="60">A cada 1 hora</SelectItem>
-                        <SelectItem value="180">A cada 3 horas</SelectItem>
-                        <SelectItem value="360">A cada 6 horas</SelectItem>
-                        <SelectItem value="720">A cada 12 horas</SelectItem>
-                        <SelectItem value="1440">Uma vez por dia</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-[10px] text-muted-foreground italic">Intervalo que o sistema buscará novos posts.</p>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground/70">Frequência de Atualização</Label>
+                  <Select
+                    value={newFeed.interval_minutes.toString()}
+                    onValueChange={(v) => setNewFeed(prev => ({ ...prev, interval_minutes: parseInt(v) }))}
+                  >
+                    <SelectTrigger className="bg-muted/20 border-border/40 h-10">
+                      <SelectValue placeholder="Selecione o intervalo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">A cada 10 minutos</SelectItem>
+                      <SelectItem value="15">A cada 15 minutos</SelectItem>
+                      <SelectItem value="30">A cada 30 minutos</SelectItem>
+                      <SelectItem value="60">A cada 1 hora</SelectItem>
+                      <SelectItem value="180">A cada 3 horas</SelectItem>
+                      <SelectItem value="360">A cada 6 horas</SelectItem>
+                      <SelectItem value="720">A cada 12 horas</SelectItem>
+                      <SelectItem value="1440">Uma vez por dia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground italic">Intervalo que o sistema buscará novos posts.</p>
                 </div>
               </div>
             </ScrollArea>
@@ -971,8 +993,6 @@ export default function Feeds() {
                   </div>
                   <p className="text-[10px] text-muted-foreground italic">Recomendado: Google Gemini para alta qualidade sem custo extra.</p>
 
-
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40">
                       <div className="space-y-0.5">
@@ -995,6 +1015,19 @@ export default function Feeds() {
                       />
                     </div>
                   </div>
+
+                  {editingFeed.image_engine === 'scraped' && (
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-semibold">Melhorar Imagem Original</p>
+                        <p className="text-[10px] text-muted-foreground">Anti-copyright & Otimização</p>
+                      </div>
+                      <Switch
+                        checked={(editingFeed as any).enhance_scraped_image}
+                        onCheckedChange={(c) => setEditingFeed({ ...editingFeed, enhance_scraped_image: c } as any)}
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label className="text-xs font-semibold text-muted-foreground/70">Frequência de Atualização</Label>

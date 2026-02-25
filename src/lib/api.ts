@@ -20,6 +20,7 @@ export interface Feed {
   generate_highlights: boolean;
   credit_source: boolean;
   image_credit_text: string | null;
+  enhance_scraped_image: boolean;
   target_platform: 'wordpress' | 'blogger' | 'custom_api' | 'local';
   created_at: string;
   updated_at: string;
@@ -136,7 +137,8 @@ export const feedsApi = {
       image_engine: feed.image_engine ?? 'scraped',
       generate_highlights: feed.generate_highlights ?? false,
       credit_source: feed.credit_source ?? false,
-      image_credit_text: feed.image_credit_text || null
+      image_credit_text: feed.image_credit_text || null,
+      enhance_scraped_image: (feed as any).enhance_scraped_image ?? false
     };
 
     // Tentar setar user_id e author_id se o banco suportar

@@ -258,14 +258,28 @@ Regras ABSOLUTAMENTE CRÍTICAS para o seu prompt em inglês:
     }
   }
 
-  async generateImage(payload: { prompt: string, sourceImageUrl?: string, sourceImageB64?: string, articleContext?: string, keys: { gemini?: string, openai?: string, hasUserOpenAI?: boolean, hasUserGemini?: boolean }, logId?: string, feedItemId: string, orgSettings?: any, imageEngine?: string }) {
-    const { prompt, sourceImageUrl, sourceImageB64, articleContext, keys, logId, feedItemId, orgSettings, imageEngine } = payload;
+  async generateImage(payload: { prompt: string, sourceImageUrl?: string, sourceImageB64?: string, articleContext?: string, keys: { gemini?: string, openai?: string, hasUserOpenAI?: boolean, hasUserGemini?: boolean }, logId?: string, feedItemId: string, orgSettings?: any, imageEngine?: string, enhanceScrapedImage?: boolean }) {
+    const { prompt, sourceImageUrl, sourceImageB64, articleContext, keys, logId, feedItemId, orgSettings, imageEngine, enhanceScrapedImage } = payload;
     
     // Priority based on Feed Image Engine or Organization Settings
     let imgProviders: string[] = [];
     const effectiveProvider = imageEngine || orgSettings?.image_provider;
 
     if (effectiveProvider === 'scraped') {
+      if (enhanceScrapedImage && sourceImageUrl) {
+        if (logId) await this.log(logId, `IA: Melhorando imagem original (Anti-Copyright & Zoom)...`);
+        try {
+          const imgResp = await fetchWithTimeout(sourceImageUrl, {}, 20000);
+          if (imgResp.ok) {
+            const imgBuffer = await imgResp.arrayBuffer();
+            const b64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+            return await this.uploadImage(b64, feedItemId, 'enhanced');
+          }
+        } catch (e: any) {
+          console.error('[EnhanceScraped] Failed:', e.message);
+          if (logId) await this.log(logId, `IA: Falha ao melhorar imagem original: ${e.message}`);
+        }
+      }
       return null; // Don't generate anything, use original image
     } else if (effectiveProvider === 'google_gemini') {
       imgProviders = ['gemini'];                           // Imagen puro
@@ -690,7 +704,8 @@ serve(async (req) => {
         logId,
         feedItemId,
         orgSettings: wl,
-        imageEngine: item.feeds?.image_engine
+        imageEngine: item.feeds?.image_engine,
+        enhanceScrapedImage: item.feeds?.enhance_scraped_image
       });
 
       // Salva apenas a imagem gerada
@@ -835,7 +850,8 @@ serve(async (req) => {
         logId,
         feedItemId,
         orgSettings: wl,
-        imageEngine: item.feeds?.image_engine
+        imageEngine: item.feeds?.image_engine,
+        enhanceScrapedImage: item.feeds?.enhance_scraped_image
       });
     }
 
