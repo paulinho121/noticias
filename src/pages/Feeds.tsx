@@ -1001,16 +1001,47 @@ export default function Feeds() {
                     </div>
                   </div>
 
-                  {editingFeed.image_engine === 'scraped' && (
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-semibold">Melhorar Imagem Original</p>
-                        <p className="text-[10px] text-muted-foreground">Anti-copyright & Otimização</p>
+                  {editingFeed.extract_images && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center border border-border/60">
+                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">Crédito de Imagem</p>
+                            <p className="text-[10px] text-muted-foreground">Atribuir autoria automaticamente</p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={editingFeed.credit_source}
+                          onCheckedChange={(checked) => setEditingFeed(prev => ({ ...prev, credit_source: checked }))}
+                        />
                       </div>
-                      <Switch
-                        checked={(editingFeed as any).enhance_scraped_image}
-                        onCheckedChange={(c) => setEditingFeed({ ...editingFeed, enhance_scraped_image: c } as any)}
-                      />
+
+                      {editingFeed.credit_source && (
+                        <div className="animate-in fade-in zoom-in-95">
+                          <Input
+                            placeholder="Texto do crédito (ex: Reprodução / Fonte)"
+                            value={editingFeed.image_credit_text || ''}
+                            onChange={(e) => setEditingFeed(prev => ({ ...prev, image_credit_text: e.target.value }))}
+                            className="h-9 text-xs bg-background/50 border-border/60"
+                          />
+                        </div>
+                      )}
+
+                      {editingFeed.image_engine === 'scraped' && (
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-semibold">Melhorar Imagem Original</p>
+                            <p className="text-[10px] text-muted-foreground">Anti-copyright & Otimização</p>
+                          </div>
+                          <Switch
+                            checked={(editingFeed as any).enhance_scraped_image}
+                            onCheckedChange={(c) => setEditingFeed({ ...editingFeed, enhance_scraped_image: c } as any)}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 

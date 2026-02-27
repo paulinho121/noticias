@@ -227,6 +227,10 @@ serve(async (req) => {
     }
 
     // 4. Preparar o corpo do post com metatags de SEO para Rank Math/Yoast
+    // Tentamos usar múltiplos formatos de chaves para garantir compatibilidade com diferentes versões e configurações
+    const focusKeyword = item.keywords && item.keywords.length > 0 ? item.keywords[0] : (item.tags && item.tags.length > 0 ? item.tags[0] : "");
+    const allKeywords = item.keywords && item.keywords.length > 0 ? item.keywords.join(', ') : focusKeyword;
+
     const postData: any = {
       title: cleanTitle,
       content: cleanContent,
@@ -235,14 +239,27 @@ serve(async (req) => {
       categories: wpCategoryIds,
       tags: wpTagIds,
       format: 'standard',
+      // Metadados SEO para Rank Math e Yoast
       meta: {
         // Rank Math SEO
         rank_math_title: cleanTitle,
         rank_math_description: cleanDescription,
-        rank_math_focus_keyword: item.keywords && item.keywords.length > 0 ? item.keywords.join(', ') : (item.tags && item.tags.length > 0 ? item.tags[0] : ""),
-        // Yoast SEO Fallback
+        rank_math_focus_keyword: allKeywords,
+        rank_math_robots: ['index', 'follow'],
+        
+        // Rank Math Interno
+        _rank_math_title: cleanTitle,
+        _rank_math_description: cleanDescription,
+        _rank_math_focus_keyword: allKeywords,
+        
+        // Yoast SEO
         _yoast_wpseo_metadesc: cleanDescription,
-        _yoast_wpseo_focuskw: item.keywords && item.keywords.length > 0 ? item.keywords[0] : ""
+        _yoast_wpseo_focuskw: focusKeyword,
+        _yoast_wpseo_title: cleanTitle,
+        
+        // Generic / Outros plugins
+        meta_description: cleanDescription,
+        focus_keyword: focusKeyword
       }
     };
 
