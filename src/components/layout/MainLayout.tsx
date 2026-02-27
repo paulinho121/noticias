@@ -82,7 +82,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
 
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest text-center">
-              © {new Date().getFullYear()} {settings.app_name} • Todos os direitos reservados
+              © {new Date().getFullYear()} labnews pro • Todos os direitos reservados
             </p>
 
             <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-tighter text-muted-foreground/50">

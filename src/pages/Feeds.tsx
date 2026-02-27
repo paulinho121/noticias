@@ -100,7 +100,7 @@ export default function Feeds() {
 
   // Queries using Hooks
   const { feeds, isLoading: feedsLoading, processFeed, createFeed, updateFeed, deleteFeed: removeFeed } = useFeeds();
-  const { schedules, toggleSchedule, createSchedule } = useSchedules();
+  const { schedules, toggleSchedule, createSchedule, updateSchedule } = useSchedules();
   const { categories, createCategory, syncCategories } = useCategories();
 
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
@@ -576,7 +576,7 @@ export default function Feeds() {
                               disabled={syncCategories.isPending}
                             >
                               {syncCategories.isPending ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
-                              Sincronizar WP
+                              Sincronizar
                             </button>
                             <button
                               type="button"
@@ -722,7 +722,11 @@ export default function Feeds() {
                       <Select
                         value={newFeed.post_status}
                         onValueChange={(value: 'draft' | 'published' | 'scheduled') =>
-                          setNewFeed(prev => ({ ...prev, post_status: value }))
+                          setNewFeed(prev => ({
+                            ...prev,
+                            post_status: value,
+                            is_pending_review: value === 'draft' // Draft implies pending review (Manual Review)
+                          }))
                         }
                       >
                         <SelectTrigger className="bg-muted/20 border-border/40">
@@ -741,22 +745,6 @@ export default function Feeds() {
 
                   {/* Feature Toggles Card */}
                   <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 group hover:border-primary/40 transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                          <Sparkles className="w-4 h-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">Auto-Publicar (Auto Pilot)</p>
-                          <p className="text-[10px] text-muted-foreground">Pular revisão manual e postar direto</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={!newFeed.is_pending_review}
-                        onCheckedChange={(checked) => setNewFeed(prev => ({ ...prev, is_pending_review: !checked }))}
-                      />
-                    </div>
-
                     <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40 hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -770,22 +758,6 @@ export default function Feeds() {
                       <Switch
                         checked={newFeed.extract_images}
                         onCheckedChange={(checked) => setNewFeed(prev => ({ ...prev, extract_images: checked }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40 hover:border-accent/20 transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                          <RefreshCw className="w-4 h-4 text-accent" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm tracking-tight">Destaques Automáticos</p>
-                          <p className="text-[10px] text-muted-foreground">Gera resumo em bullet points (TL;DR)</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={newFeed.generate_highlights}
-                        onCheckedChange={(checked) => setNewFeed(prev => ({ ...prev, generate_highlights: checked }))}
                       />
                     </div>
 
@@ -994,16 +966,29 @@ export default function Feeds() {
                   <p className="text-[10px] text-muted-foreground italic">Recomendado: Google Gemini para alta qualidade sem custo extra.</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-semibold">Auto-Publicar</p>
-                        <p className="text-[10px] text-muted-foreground">Pular revisão manual</p>
-                      </div>
-                      <Switch
-                        checked={editingFeed.auto_publish}
-                        onCheckedChange={(c) => setEditingFeed({ ...editingFeed, auto_publish: c })}
-                      />
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-muted-foreground/70">Status de Publicação</Label>
+                      <Select
+                        value={editingFeed.post_status}
+                        onValueChange={(value: 'draft' | 'published' | 'scheduled') =>
+                          setEditingFeed({
+                            ...editingFeed,
+                            post_status: value,
+                            auto_publish: value === 'published' // Auto-publish only if 'published' is selected
+                          })
+                        }
+                      >
+                        <SelectTrigger className="bg-muted/20 border-border/40">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card border-primary/20">
+                          <SelectItem value="draft">Rascunho (Revisão Manual)</SelectItem>
+                          <SelectItem value="published">Publicado (Auto Pilot)</SelectItem>
+                          <SelectItem value="scheduled">Agendado</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
                     <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40">
                       <div className="space-y-0.5">
                         <p className="text-sm font-semibold">Extrair Imagens</p>

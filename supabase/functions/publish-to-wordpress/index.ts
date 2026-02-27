@@ -167,41 +167,83 @@ serve(async (req) => {
       }
     }
 
-    let finalPostContent = item.rewritten_content || item.source_content;
-    
+    // 3.6 Sincronizar Tags no WordPress
+    let wpTagIds: number[] = [];
+    if (item.tags && item.tags.length > 0) {
+      console.log(`Sincronizando tags no WP: ${item.tags.join(', ')}`);
+      for (const tagName of item.tags) {
+        try {
+          const searchRes = await fetch(`${url.replace(/\/$/, '')}/wp-json/wp/v2/tags?search=${encodeURIComponent(tagName)}`, {
+            headers: { 'Authorization': `Basic ${auth}` }
+          });
+          const searchData = await searchRes.json();
+          let tagId = Array.isArray(searchData) ? searchData.find((t: any) => t.name.toLowerCase() === tagName.toLowerCase())?.id : null;
+          
+          if (!tagId) {
+            const createRes = await fetch(`${url.replace(/\/$/, '')}/wp-json/wp/v2/tags`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ name: tagName })
+            });
+            const createData = await createRes.json();
+            if (createData.id) tagId = createData.id;
+          }
+          
+          if (tagId) wpTagIds.push(tagId);
+        } catch (tagErr) {
+          console.error(`Erro ao sincronizar tag ${tagName}:`, tagErr);
+        }
+      }
+    }
+
+    // Limpar marcadores de IA do conteúdo e título
+    const aiMarker = /\u200B\u200C\u200B/g;
+    let cleanTitle = (item.rewritten_title || item.source_title || "").replace(aiMarker, "");
+    let cleanContent = (item.rewritten_content || item.source_content || "").replace(aiMarker, "");
+    const cleanDescription = (item.meta_description || "").replace(aiMarker, "");
+
     // Adicionar vídeo se houver
     if (item.source_video) {
       let videoEmbed = '';
       const videoUrl = item.source_video;
       
       if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-        // Embed de YouTube
         const vidId = videoUrl.includes('v=') ? videoUrl.split('v=')[1].split('&')[0] : videoUrl.split('/').pop();
         videoEmbed = `<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper"><iframe title="YouTube video player" src="https://www.youtube.com/embed/${vidId}" width="100%" height="450" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div></figure>`;
       } else {
-        // Vídeo direto ou outro formato
         videoEmbed = `<figure class="wp-block-video"><video controls src="${videoUrl}" style="width:100%"></video></figure>`;
       }
       
-      finalPostContent = `${videoEmbed}\n${finalPostContent}`;
+      cleanContent = `${videoEmbed}\n${cleanContent}`;
     }
 
     // Adicionar Créditos de Imagem se houver
-    if (feed.credit_source && feed.image_credit_text && imageUrl) {
-      const creditsHtml = `<figcaption style="font-size: 11px; color: #666; font-style: italic; margin-top: 5px; margin-bottom: 20px;">Créditos da imagem: ${feed.image_credit_text}</figcaption>`;
-      // WP typically puts it in a figcaption if we had a <figure>, but since upload sets the featured media,
-      // we can prepend this at the very top of the content so it renders right below the featured image:
-      finalPostContent = `${creditsHtml}\n${finalPostContent}`;
+    if (feed.credit_source && feed.image_credit_text) {
+      const creditsHtml = `<p style="font-size: 11px; color: #666; font-style: italic; margin-top: 5px; margin-bottom: 20px;">Créditos da imagem: ${feed.image_credit_text}</p>`;
+      cleanContent = `${creditsHtml}\n${cleanContent}`;
     }
 
-    // 4. Preparar o corpo do post
-    const postData = {
-      title: item.rewritten_title || item.source_title,
-      content: finalPostContent,
+    // 4. Preparar o corpo do post com metatags de SEO para Rank Math/Yoast
+    const postData: any = {
+      title: cleanTitle,
+      content: cleanContent,
       status: (feed.post_status === 'published' || feed.post_status === 'scheduled') ? 'publish' : 'draft',
       featured_media: featuredMediaId,
       categories: wpCategoryIds,
+      tags: wpTagIds,
       format: 'standard',
+      meta: {
+        // Rank Math SEO
+        rank_math_title: cleanTitle,
+        rank_math_description: cleanDescription,
+        rank_math_focus_keyword: item.keywords && item.keywords.length > 0 ? item.keywords.join(', ') : (item.tags && item.tags.length > 0 ? item.tags[0] : ""),
+        // Yoast SEO Fallback
+        _yoast_wpseo_metadesc: cleanDescription,
+        _yoast_wpseo_focuskw: item.keywords && item.keywords.length > 0 ? item.keywords[0] : ""
+      }
     };
 
     // 5. Fazer o disparo para a REST API do WordPress

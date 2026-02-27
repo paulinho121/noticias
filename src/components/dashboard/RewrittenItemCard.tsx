@@ -285,6 +285,15 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
         published: 'text-purple-500 bg-purple-500/10',
     };
 
+    const statusLabels: Record<string, string> = {
+        pending: 'AGUARDANDO',
+        processing: 'PROCESSANDO',
+        success: 'A PUBLICAR',
+        ready: 'PRONTO',
+        error: 'ERRO',
+        published: 'PUBLICADO',
+    };
+
     const display = safeParseAiContent(item.rewritten_title || item.source_title, item.rewritten_content || item.source_content);
 
     return (
@@ -304,7 +313,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                     <div className="flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar">
                         <Badge variant="outline" className={cn("px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] uppercase font-bold tracking-wider border-none shrink-0", statusColors[item.status as keyof typeof statusColors])}>
                             <span className={cn("w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80", item.status === 'processing' && "animate-pulse")} />
-                            {item.status === 'processing' && progress > 0 ? `${progress}% ${item.status}` : item.status}
+                            {item.status === 'processing' && progress > 0 ? `${progress}% PROCESSANDO` : (statusLabels[item.status] || item.status)}
                         </Badge>
 
                         {item.feeds?.name && (
