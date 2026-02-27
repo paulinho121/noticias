@@ -86,6 +86,17 @@ serve(async (req) => {
         content = `<img src="${imageUrl}" style="max-width:100%; height:auto; margin-bottom:5px;" />\n${creditsHtml}\n<br/>${content}`;
     }
 
+    // Adicionar Link da Fonte se habilitado
+    if (item.feeds.include_source_link && item.source_url) {
+        try {
+            const host = new URL(item.source_url).hostname.replace('www.', '');
+            const sourceHtml = `<p style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eeeeee; font-style: italic;">Fonte: <a href="${item.source_url}">${host}</a></p>`;
+            content = `${content}\n${sourceHtml}`;
+        } catch (e) {
+            console.warn("[Blogger] Erro ao extrair host da fonte:", e);
+        }
+    }
+
     // 4. Enviar via Resend
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
@@ -102,7 +113,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: 'Notícias AI <onboarding@resend.dev>',
         to: [posting_email],
-        subject: title,
+        subject: item.tags && item.tags.length > 0 ? `${title} [${item.tags.join(', ')}]` : title,
         html: content,
       }),
     });

@@ -763,6 +763,7 @@ export default function Feeds() {
 
                     {newFeed.extract_images && (
                       <div className="space-y-4">
+                        {/* Existing Image Credit Toggle */}
                         <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center border border-border/60">
@@ -789,6 +790,23 @@ export default function Feeds() {
                             />
                           </div>
                         )}
+
+                        {/* NEW: Source Link Toggle */}
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40 hover:border-primary/20 transition-all">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Globe className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm">Link da Fonte</p>
+                              <p className="text-[10px] text-muted-foreground">Adicionar link para o post original</p>
+                            </div>
+                          </div>
+                          <Switch
+                            checked={newFeed.include_source_link}
+                            onCheckedChange={(checked) => setNewFeed(prev => ({ ...prev, include_source_link: checked }))}
+                          />
+                        </div>
 
                         {newFeed.image_engine === 'scraped' && (
                           <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-all">
@@ -1029,6 +1047,23 @@ export default function Feeds() {
                           />
                         </div>
                       )}
+
+                      {/* NEW: Source Link Toggle */}
+                      <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/40 hover:border-primary/20 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Globe className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">Link da Fonte</p>
+                            <p className="text-[10px] text-muted-foreground">Adicionar link para o post original</p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={editingFeed.include_source_link}
+                          onCheckedChange={(checked) => setEditingFeed(prev => ({ ...prev, include_source_link: checked }))}
+                        />
+                      </div>
 
                       {editingFeed.image_engine === 'scraped' && (
                         <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">

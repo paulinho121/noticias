@@ -72,7 +72,7 @@ serve(async (req) => {
     // Buscar o feed separadamente para evitar problemas de Join no RLS
     const { data: feed, error: feedError } = await supabase
       .from('feeds')
-      .select('post_status, user_id, credit_source, image_credit_text')
+      .select('post_status, user_id, credit_source, image_credit_text, include_source_link')
       .eq('id', item.feed_id)
       .maybeSingle();
 
@@ -226,6 +226,17 @@ serve(async (req) => {
       cleanContent = `${creditsHtml}\n${cleanContent}`;
     }
 
+    // Adicionar Link da Fonte se habilitado
+    if (feed.include_source_link && item.source_url) {
+      try {
+        const sourceHostname = new URL(item.source_url).hostname.replace('www.', '');
+        const sourceHtml = `<p style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-style: italic;">Fonte: <a href="${item.source_url}" target="_blank" rel="noopener noreferrer">${sourceHostname}</a></p>`;
+        cleanContent = `${cleanContent}\n${sourceHtml}`;
+      } catch (e) {
+        console.warn('Erro ao gerar link da fonte:', e);
+      }
+    }
+
     // 4. Preparar o corpo do post com metatags de SEO para Rank Math/Yoast
     // Tentamos usar múltiplos formatos de chaves para garantir compatibilidade com diferentes versões e configurações
     const focusKeyword = item.keywords && item.keywords.length > 0 ? item.keywords[0] : (item.tags && item.tags.length > 0 ? item.tags[0] : "");
@@ -234,6 +245,7 @@ serve(async (req) => {
     const postData: any = {
       title: cleanTitle,
       content: cleanContent,
+      slug: item.slug || undefined,
       status: (feed.post_status === 'published' || feed.post_status === 'scheduled') ? 'publish' : 'draft',
       featured_media: featuredMediaId,
       categories: wpCategoryIds,

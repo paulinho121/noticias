@@ -20,6 +20,7 @@ export interface Feed {
   generate_highlights: boolean;
   credit_source: boolean;
   image_credit_text: string | null;
+  include_source_link: boolean;
   enhance_scraped_image: boolean;
   target_platform: 'wordpress' | 'blogger' | 'custom_api' | 'local';
   created_at: string;
@@ -138,6 +139,7 @@ export const feedsApi = {
       generate_highlights: feed.generate_highlights ?? false,
       credit_source: feed.credit_source ?? false,
       image_credit_text: feed.image_credit_text || null,
+      include_source_link: feed.include_source_link ?? false,
       enhance_scraped_image: (feed as any).enhance_scraped_image ?? false
     };
 
