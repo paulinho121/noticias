@@ -78,7 +78,7 @@ export default function Feeds() {
     name: '',
     url: '',
     category_id: '',
-    post_status: 'draft' as 'draft' | 'published' | 'scheduled',
+    post_status: 'published' as 'draft' | 'published' | 'scheduled',
     extract_images: true,
     custom_prompt: '',
     is_pending_review: false,
@@ -86,10 +86,13 @@ export default function Feeds() {
     keywords: '',
     credit_source: false,
     image_credit_text: '',
-    image_engine: 'scraped' as 'scraped' | 'google_gemini' | 'dalle' | 'gemini_2_5',
+    image_engine: 'gemini_2_5' as 'scraped' | 'google_gemini' | 'dalle' | 'gemini_2_5',
     enhance_scraped_image: false,
     generate_highlights: true,
     target_platform: 'wordpress' as 'wordpress' | 'blogger' | 'custom_api' | 'local',
+    include_source_link: false,
+    avoid_logo: false,
+    is_active: true,
     interval_minutes: 60,
   });
 
@@ -159,6 +162,7 @@ export default function Feeds() {
         enhance_scraped_image: newFeed.enhance_scraped_image,
         generate_highlights: newFeed.generate_highlights,
         target_platform: newFeed.target_platform,
+        include_source_link: newFeed.include_source_link,
       });
 
       // Create default schedule
@@ -183,16 +187,22 @@ export default function Feeds() {
   const handleUpdateFeed = async () => {
     if (!editingFeed) return;
     try {
+      // Strip non-database fields from editingFeed before updating
+      const { interval_minutes, ...feedUpdates } = editingFeed as any;
+
       await updateFeed.mutateAsync({
         id: editingFeed.id,
-        updates: editingFeed
+        updates: feedUpdates
       });
-      // Update schedule too
+
+      // Update schedule too if interval changed
       const schedule = getScheduleByFeedId(editingFeed.id);
-      if (schedule && (editingFeed as any).interval_minutes) {
+      const newInterval = (editingFeed as any).interval_minutes;
+
+      if (schedule && newInterval !== undefined) {
         await updateSchedule.mutateAsync({
           id: schedule.id,
-          updates: { interval_minutes: (editingFeed as any).interval_minutes }
+          updates: { interval_minutes: newInterval }
         });
       }
 
@@ -208,7 +218,7 @@ export default function Feeds() {
       name: '',
       url: '',
       category_id: '',
-      post_status: 'draft',
+      post_status: 'published',
       extract_images: true,
       custom_prompt: '',
       is_pending_review: false,
@@ -216,10 +226,13 @@ export default function Feeds() {
       keywords: '',
       credit_source: false,
       image_credit_text: '',
-      image_engine: 'scraped',
+      image_engine: 'gemini_2_5',
       enhance_scraped_image: false,
       generate_highlights: true,
       target_platform: 'wordpress',
+      include_source_link: false,
+      avoid_logo: false,
+      is_active: true,
       interval_minutes: 60,
     });
   };
@@ -672,7 +685,6 @@ export default function Feeds() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="scraped">Raspagem (Feed Original)</SelectItem>
-                          <SelectItem value="google_gemini">Google Gemini (Imagen 3)</SelectItem>
                           <SelectItem value="gemini_2_5">Gemini 2.5 Flash Image (Novo)</SelectItem>
                           <SelectItem value="dalle">DALL-E 3 (OpenAI)</SelectItem>
                         </SelectContent>
@@ -936,7 +948,6 @@ export default function Feeds() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="scraped">Raspagem (Feed Original)</SelectItem>
-                          <SelectItem value="google_gemini" className="font-bold text-primary">✨ Google Gemini (Imagen 3)</SelectItem>
                           <SelectItem value="gemini_2_5" className="font-bold text-primary">🚀 Gemini 2.5 Flash Image (Novo)</SelectItem>
                           <SelectItem value="dalle">DALL-E 3 (OpenAI)</SelectItem>
                         </SelectContent>

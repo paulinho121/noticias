@@ -126,10 +126,6 @@ export default function Login() {
                                     }}
                                 />
                             </div>
-                            <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                            <p className="text-[10px] uppercase tracking-[0.3em] font-black text-white/40 leading-tight">
-                                {settings.hero_subtitle || 'System Engine'}
-                            </p>
                         </div>
                     </div>
 

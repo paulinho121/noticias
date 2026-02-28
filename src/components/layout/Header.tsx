@@ -34,6 +34,18 @@ export function Header({
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialSearchValue);
 
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    import('@/integrations/supabase/client').then(({ supabase }) => {
+      supabase.auth.getUser().then(({ data }) => {
+        setUserEmail(data.user?.email || null);
+      });
+    });
+  }, []);
+
+  const isFounder = userEmail === 'jotavmkt@gmail.com';
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -97,17 +109,19 @@ export function Header({
 
           <div className="flex items-center gap-1 md:gap-2">
             {/* Admin Message Button */}
-            <button
-              onClick={() => setIsNotificationModalOpen(true)}
-              className="group relative p-2 rounded-lg hover:bg-muted transition-all duration-200 border border-transparent hover:border-primary/20"
-              title="Assistência Técnica Global"
-            >
-              <Wrench className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="absolute top-1 right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-            </button>
+            {!isFounder && (
+              <button
+                onClick={() => setIsNotificationModalOpen(true)}
+                className="group relative p-2 rounded-lg hover:bg-muted transition-all duration-200 border border-transparent hover:border-primary/20"
+                title="Assistência Técnica Global"
+              >
+                <Wrench className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="absolute top-1 right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+              </button>
+            )}
 
 
 

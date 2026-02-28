@@ -31,12 +31,12 @@ interface WhiteLabelContextType {
 }
 
 const defaultSettings: WhiteLabelSettings = {
-    app_name: 'Labnews.pro',
+    app_name: 'LabNews',
     logo_url: null,
     favicon_url: null,
     primary_color: '#00E5BC',
     hero_title: 'Automação de Conteúdo Inteligente',
-    hero_subtitle: 'Crie, reescreva e publique em escala com IA',
+    hero_subtitle: null,
     support_email: null,
     ai_model: 'gemini-1.5-flash',
     ai_provider: 'gemini',

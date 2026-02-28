@@ -97,16 +97,10 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
             <img
               src={settings.logo_url || "/logo.png"}
               alt={settings.app_name}
-              className="h-10 w-auto object-contain filter drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] dark:brightness-100 dark:grayscale-0 brightness-0 grayscale-[0.8] transition-all duration-300"
+              className="h-10 w-auto object-contain filter drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] invert dark:invert-0 transition-all duration-300"
             />
 
-            <div className="flex flex-col">
-              {settings.hero_subtitle && settings.hero_subtitle.toLowerCase() !== 'ok' && (
-                <span className="text-[10px] uppercase tracking-[0.2em] font-black text-foreground/60 dark:text-white/50 leading-tight">
-                  {settings.hero_subtitle}
-                </span>
-              )}
-            </div>
+
           </div>
         ) : (
           <div className="relative animate-in fade-in zoom-in duration-300 z-10">

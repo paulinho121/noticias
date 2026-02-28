@@ -63,7 +63,15 @@ export function useFeedItems(feedId?: string) {
     const approveItem = useMutation({
         mutationFn: async ({ itemId, updatedData, platformId }: { itemId: string; updatedData?: Partial<FeedItem>; platformId?: string }) => {
             // 0. Se houver dados editados ou o user_id for nulo, atualiza no banco
-            const { data: currentUser } = await supabase.auth.getUser();
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            
+            // Buscar organização do usuário para garantir isolamento nuclear
+            const { data: memberData } = await (supabase as any)
+                .from('organization_members')
+                .select('organization_id')
+                .eq('user_id', currentUser?.id)
+                .maybeSingle();
+
             const updates: any = {};
             if (updatedData) {
                 if (updatedData.rewritten_title) updates.rewritten_title = updatedData.rewritten_title;
@@ -76,8 +84,13 @@ export function useFeedItems(feedId?: string) {
                 if (updatedData.keywords) updates.keywords = updatedData.keywords;
             }
             
-            // Garantir que o user_id esteja preenchido para evitar erros de RLS na Edge Function
-            updates.user_id = currentUser?.user?.id;
+            // Garantir que o user_id e organization_id estejam preenchidos
+            if (currentUser?.id) {
+                updates.user_id = currentUser.id;
+            }
+            if (memberData?.organization_id) {
+                updates.organization_id = memberData.organization_id;
+            }
 
             const { error: updateError } = await supabase
                 .from('feed_items')
@@ -91,7 +104,7 @@ export function useFeedItems(feedId?: string) {
                 .from('platform_settings')
                 .select('*')
                 .eq('platform_id', 'wordpress')
-                .eq('user_id', currentUser?.user?.id)
+                .eq('user_id', currentUser?.id)
                 .eq('is_connected', true)
                 .maybeSingle();
 
@@ -99,7 +112,7 @@ export function useFeedItems(feedId?: string) {
 
             if (platformId === 'wordpress' || (!platformId && isWordpressEnabled)) {
                 // 2. Se tiver WP conectado (e for o alvo ou o padrão), tenta publicar via Edge Function
-                const result = await feedItemsApi.publishToWordpress(itemId);
+                const result = await feedItemsApi.publishToWordpress(itemId, 'publish');
                 
                 if (!result.success) {
                     throw new Error(result.error || 'Falha ao publicar no WordPress');

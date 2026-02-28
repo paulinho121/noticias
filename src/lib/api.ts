@@ -298,9 +298,9 @@ export const feedItemsApi = {
     return data;
   },
 
-  async publishToWordpress(feedItemId: string): Promise<{ success: boolean; error?: string; link?: string }> {
+  async publishToWordpress(feedItemId: string, status?: string): Promise<{ success: boolean; error?: string; link?: string }> {
     const { data, error } = await supabase.functions.invoke('publish-to-wordpress', {
-      body: { feedItemId },
+      body: { feedItemId, status },
     });
 
     if (error) throw error;

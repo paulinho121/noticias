@@ -50,7 +50,7 @@ serve(async (req) => {
   }
 
   try {
-    const { feedItemId } = await req.json();
+    const { feedItemId, status: requestedStatus } = await req.json();
 
     if (!feedItemId) {
       throw new Error('feedItemId is required');
@@ -246,7 +246,7 @@ serve(async (req) => {
       title: cleanTitle,
       content: cleanContent,
       slug: item.slug || undefined,
-      status: (feed.post_status === 'published' || feed.post_status === 'scheduled') ? 'publish' : 'draft',
+      status: requestedStatus || ((feed.post_status === 'published' || feed.post_status === 'scheduled') ? 'publish' : 'draft'),
       featured_media: featuredMediaId,
       categories: wpCategoryIds,
       tags: wpTagIds,

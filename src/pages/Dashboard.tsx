@@ -100,7 +100,7 @@ export default function Dashboard() {
     <MainLayout>
       <Header
         title={settings.hero_title || "Painel de Controle"}
-        subtitle={settings.hero_subtitle || "Gerenciamento centralizado de automação e inteligência de conteúdo."}
+        subtitle=""
         showAddButton
         addButtonText="Novo Projeto"
         onAddClick={() => navigate('/feeds')}

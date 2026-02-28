@@ -623,20 +623,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-2">
-                                {connectedSocials.length > 0 && (
-                                    <Button
-                                        size="sm"
-                                        className="h-10 px-5 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 gap-2 rounded-xl group/post"
-                                        onClick={() => setShowSocialShare(true)}
-                                    >
-                                        <Send className="w-4 h-4 group-hover/post:translate-x-0.5 group-hover/post:-translate-y-0.5 transition-transform" />
-                                        <span>Postar nas Redes</span>
-                                    </Button>
-                                )}
-
-                                <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
-
+                            <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-end">
                                 <Button
                                     size="sm"
                                     variant="outline"
@@ -698,28 +685,10 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                                 </Button>
                             </div>
                         </div>
-
-                        {connectedSocials.length > 0 && (
-                            <div className="flex items-center gap-3 pt-3 border-t border-border/40">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest">Canais Disponíveis</span>
-                                <div className="flex gap-2">
-                                    {connectedSocials.map(s => (
-                                        <div key={s.platform_id} className="w-7 h-7 rounded-sm bg-primary/5 border border-primary/10 flex items-center justify-center" title={s.platform_id}>
-                                            {s.platform_id === 'twitter' && <Twitter className="w-3.5 h-3.5 text-primary" />}
-                                            {s.platform_id === 'linkedin' && <Zap className="w-3.5 h-3.5 text-primary" />}
-                                            {s.platform_id === 'facebook' && <Facebook className="w-3.5 h-3.5 text-primary" />}
-                                            {s.platform_id === 'instagram' && <Instagram className="w-3.5 h-3.5 text-primary" />}
-                                            {!['twitter', 'linkedin', 'facebook', 'instagram'].includes(s.platform_id) && <Share2 className="w-3.5 h-3.5 text-primary" />}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
 
-            {/* Social Share Dialog */}
             <Dialog open={showSocialShare} onOpenChange={setShowSocialShare}>
                 <DialogContent className="sm:max-w-md bg-background border-border/40">
                     <DialogHeader>
