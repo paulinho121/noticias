@@ -751,6 +751,7 @@ serve(async (req) => {
       - Use HTML semântico (<h2>, <h3>, <b>, <ul>, <li>).
       - Divida o texto em parágrafos curtos para facilitar a leitura.
       - Enriqueça o texto com informações relevantes caso o original seja muito curto.
+      - OBRIGATÓRIO: Se o texto original contiver créditos de imagem (ex: "Foto: Nome", "Crédito: Nome", "Imagem: Nome"), mantenha-os INTACTOS e adicione-os no final do seu artigo formatados em itálico.
 
       INSTRUÇÃO VISUAL:
       Crie um prompt detalhado em inglês (visual_prompt) para geração de imagem. Descreva a cena de forma fotorrealista, 8k, iluminação cinematográfica, focada no tema central do artigo.

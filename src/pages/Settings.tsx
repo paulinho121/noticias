@@ -757,7 +757,7 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="glass-card p-6">
+            <div className="hidden">
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Image className="w-5 h-5 text-primary" />
                 Preferências de Mídia

@@ -172,11 +172,8 @@ function stripHtml(html: string): string {
     /Leia mais/gi,
     /Confira também/gi,
     /Assine a nossa newsletter/gi,
-    /Clique aqui para ler/gi,
     /Siga-nos nas redes sociais/gi,
-    /Imagem ilustrativa/gi,
-    /Foto: [^<.]+/gi,
-    /Crédito: [^<.]+/gi
+    /Imagem ilustrativa/gi
   ];
 
   let cleaned = html
