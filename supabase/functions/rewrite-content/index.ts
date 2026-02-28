@@ -746,7 +746,7 @@ serve(async (req) => {
       REGRAS DE TÍTULO (CRÍTICO):
       - Crie um título magnético (H1) que atraia cliques sem ser enganoso.
       - Título deve ser ÚNICO e ter no máximo 85 caracteres.
-      
+      - FORMATAÇÃO: OBRIGATÓRIO usar o padrão do jornalismo profissional brasileiro. Apenas a primeira letra da frase e nomes próprios devem ser maiúsculos (Sentence case). NUNCA capitalize a primeira letra de todas as palavras (PROIBIDO usar Title Case). Exemplo correto: "Brasil vence Venezuela e avança no torneio".
       ESTRUTURA DE CONTEÚDO:
       - Use HTML semântico (<h2>, <h3>, <b>, <ul>, <li>).
       - Divida o texto em parágrafos curtos para facilitar a leitura.
