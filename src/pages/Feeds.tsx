@@ -558,10 +558,12 @@ export default function Feeds() {
                             <Rss className="w-3.5 h-3.5" />
                             RSS Feed
                           </TabsTrigger>
+                          {/* 
                           <TabsTrigger value="keywords" className="gap-2 data-[state=active]:bg-background data-[state=active]:text-accent data-[state=active]:shadow-sm transition-all">
                             <Sparkles className="w-3.5 h-3.5" />
                             Palavras-Chave
                           </TabsTrigger>
+                          */}
                         </TabsList>
                       </Tabs>
                     </div>
