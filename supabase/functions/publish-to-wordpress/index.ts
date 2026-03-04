@@ -237,41 +237,50 @@ serve(async (req) => {
       }
     }
 
-    // 4. Preparar o corpo do post com metatags de SEO para Rank Math/Yoast
-    // Tentamos usar múltiplos formatos de chaves para garantir compatibilidade com diferentes versões e configurações
-    const focusKeyword = item.keywords && item.keywords.length > 0 ? item.keywords[0] : (item.tags && item.tags.length > 0 ? item.tags[0] : "");
-    const allKeywords = item.keywords && item.keywords.length > 0 ? item.keywords.join(', ') : focusKeyword;
+    // 4. Preparar o corpo do post com SEO completo
+    const focusKeyword = item.keywords && item.keywords.length > 0
+      ? item.keywords[0]
+      : (item.tags && item.tags.length > 0 ? item.tags[0] : "");
+    const allKeywords = item.keywords && item.keywords.length > 0
+      ? item.keywords.join(', ')
+      : focusKeyword;
+
+    // Gera slug SEO-friendly a partir do título se não existir
+    const seoSlug = item.slug || cleanTitle
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .substring(0, 80);
 
     const postData: any = {
       title: cleanTitle,
       content: cleanContent,
-      slug: item.slug || undefined,
+      excerpt: cleanDescription || undefined,
+      slug: seoSlug,
       status: requestedStatus || ((feed.post_status === 'published' || feed.post_status === 'scheduled') ? 'publish' : 'draft'),
       featured_media: featuredMediaId,
       categories: wpCategoryIds,
       tags: wpTagIds,
       format: 'standard',
-      // Metadados SEO para Rank Math e Yoast
+      // Metadados SEO — aceitos pela REST API quando os campos estão registrados pelo plugin
       meta: {
-        // Rank Math SEO
-        rank_math_title: cleanTitle,
-        rank_math_description: cleanDescription,
+        // ── Rank Math ──
+        rank_math_title:         cleanTitle,
+        rank_math_description:   cleanDescription,
         rank_math_focus_keyword: allKeywords,
-        rank_math_robots: ['index', 'follow'],
-        
-        // Rank Math Interno
-        _rank_math_title: cleanTitle,
-        _rank_math_description: cleanDescription,
-        _rank_math_focus_keyword: allKeywords,
-        
-        // Yoast SEO
+        rank_math_robots:        'index,follow',
+        // ── Yoast SEO ──
+        _yoast_wpseo_title:    cleanTitle,
         _yoast_wpseo_metadesc: cleanDescription,
-        _yoast_wpseo_focuskw: focusKeyword,
-        _yoast_wpseo_title: cleanTitle,
-        
-        // Generic / Outros plugins
+        _yoast_wpseo_focuskw:  focusKeyword,
+        // ── SEOPress ──
+        _seopress_titles_title: cleanTitle,
+        _seopress_titles_desc:  cleanDescription,
+        // ── Genérico ──
         meta_description: cleanDescription,
-        focus_keyword: focusKeyword
+        focus_keyword:    focusKeyword,
       }
     };
 
@@ -297,7 +306,66 @@ serve(async (req) => {
 
     console.log(`Sucesso! ID WP: ${wpResult.id}, Link: ${wpResult.link}`);
 
-    // 4. Atualizar o item e logar sucesso
+    // 5. Injetar SEO via Rank Math REST API (chamada separada, mais confiável)
+    // O Rank Math expõe /wp-json/rankmath/v1/updateMeta quando o plugin está ativo
+    const wpBase = url.replace(/\/$/, '');
+    try {
+      const rankMathPayload = {
+        objectID:  wpResult.id,
+        objectType: 'post',
+        meta: {
+          'rank_math_title':         cleanTitle,
+          'rank_math_description':   cleanDescription,
+          'rank_math_focus_keyword': allKeywords,
+          'rank_math_robots':        'index,follow',
+        }
+      };
+      const rmRes = await fetch(`${wpBase}/wp-json/rankmath/v1/updateMeta`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(rankMathPayload),
+      });
+      if (rmRes.ok) {
+        console.log('[SEO] Rank Math meta updated via /rankmath/v1/updateMeta');
+      } else {
+        const rmErr = await rmRes.text();
+        console.warn('[SEO] Rank Math endpoint unavailable, fallback to PATCH meta:', rmErr);
+
+        // Fallback: PATCH direto no post — funciona quando o Rank Math registrou os campos corretamente
+        const patchRes = await fetch(`${wpBase}/wp-json/wp/v2/posts/${wpResult.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            meta: {
+              rank_math_title:         cleanTitle,
+              rank_math_description:   cleanDescription,
+              rank_math_focus_keyword: allKeywords,
+              rank_math_robots:        'index,follow',
+              _yoast_wpseo_title:      cleanTitle,
+              _yoast_wpseo_metadesc:   cleanDescription,
+              _yoast_wpseo_focuskw:    focusKeyword,
+              _seopress_titles_title:  cleanTitle,
+              _seopress_titles_desc:   cleanDescription,
+            }
+          }),
+        });
+        if (patchRes.ok) {
+          console.log('[SEO] Meta updated via PATCH fallback.');
+        } else {
+          console.warn('[SEO] PATCH meta also failed. SEO plugin may need manual configuration.');
+        }
+      }
+    } catch (seoErr) {
+      console.warn('[SEO] Error updating Rank Math meta (non-fatal):', seoErr);
+    }
+
+    // 6. Atualizar o item e logar sucesso
     const { error: updateError } = await supabase
       .from('feed_items')
       .update({ 
@@ -319,7 +387,7 @@ serve(async (req) => {
       step: 'wordpress_publish',
       message: updateError 
         ? `Post publicado no WP (${wpResult.id}), mas erro ao atualizar banco: ${updateError.message}`
-        : `Post publicado com sucesso no WordPress! ID WP: ${wpResult.id}`,
+        : `Post publicado com sucesso no WordPress! ID WP: ${wpResult.id} | SEO: title+desc+keywords`,
     });
 
     return new Response(
