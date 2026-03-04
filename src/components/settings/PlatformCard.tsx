@@ -29,6 +29,7 @@ export interface Platform {
   color: string;
   fields: PlatformField[];
   docsUrl: string;
+  comingSoon?: boolean;
 }
 
 export interface PlatformField {
@@ -87,6 +88,47 @@ export function PlatformCard({
     onTest(platform.id);
     setIsTesting(false);
   };
+
+  if (platform.comingSoon) {
+    return (
+      <div className="glass-card p-6 relative overflow-hidden border-border/20 opacity-70 select-none">
+        {/* Coming Soon Overlay */}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 backdrop-blur-[2px] bg-black/40 rounded-2xl">
+          <div className="px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 flex items-center gap-2">
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">🚀 Em Breve</span>
+          </div>
+          <p className="text-[10px] text-muted-foreground/70">Disponível em uma versão futura</p>
+        </div>
+
+        {/* Blurred Platform header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-inner blur-[1px]"
+            style={{
+              backgroundColor: `${platform.color}15`,
+              border: `1px solid ${platform.color}30`
+            }}
+          >
+            {platform.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-foreground text-lg truncate tracking-tight blur-[1px]">{platform.name}</h3>
+            <span className="text-xs text-muted-foreground line-clamp-1 blur-[1px]">{platform.description}</span>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="h-[44px] flex items-center blur-[2px]">
+            <p className="text-sm text-muted-foreground">Conecte agora para habilitar o processamento automático nesta rede.</p>
+          </div>
+          <div className="flex gap-2 pt-2 blur-[2px]">
+            <div className="flex-1 h-11 rounded-xl bg-primary/20 border border-primary/10" />
+            <div className="h-11 w-11 rounded-xl bg-white/5 border border-white/10" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

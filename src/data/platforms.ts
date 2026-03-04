@@ -47,6 +47,7 @@ export const platforms: Platform[] = [
     description: 'Plataforma de design e publicação moderna',
     icon: '⚡',
     color: '#0055FF',
+    comingSoon: true,
     docsUrl: 'https://www.framer.com/developers/',
     fields: [
       { id: 'project_id', label: 'Project ID', placeholder: 'prj_xxx', type: 'text', required: true },
@@ -59,6 +60,7 @@ export const platforms: Platform[] = [
     description: 'CMS moderno focado em publicação profissional',
     icon: '👻',
     color: '#15171A',
+    comingSoon: true,
     docsUrl: 'https://ghost.org/docs/admin-api/',
     fields: [
       { id: 'url', label: 'Ghost URL', placeholder: 'https://seu-blog.ghost.io', type: 'url', required: true },
@@ -71,6 +73,7 @@ export const platforms: Platform[] = [
     description: 'Plataforma de publicação e leitura',
     icon: '📰',
     color: '#00AB6C',
+    comingSoon: true,
     docsUrl: 'https://github.com/Medium/medium-api-docs',
     fields: [
       { id: 'integration_token', label: 'Integration Token', placeholder: 'seu-token-de-integracao', type: 'password', required: true },
@@ -83,6 +86,7 @@ export const platforms: Platform[] = [
     description: 'Design e desenvolvimento visual profissional',
     icon: '🌊',
     color: '#4353FF',
+    comingSoon: true,
     docsUrl: 'https://developers.webflow.com/',
     fields: [
       { id: 'site_id', label: 'Site ID', placeholder: 'xxx', type: 'text', required: true },
@@ -96,6 +100,7 @@ export const platforms: Platform[] = [
     description: 'Workspace colaborativo e banco de dados',
     icon: '📓',
     color: '#000000',
+    comingSoon: true,
     docsUrl: 'https://developers.notion.com/',
     fields: [
       { id: 'integration_token', label: 'Integration Token', placeholder: 'secret_xxx', type: 'password', required: true },
@@ -108,6 +113,7 @@ export const platforms: Platform[] = [
     description: 'Headless CMS empresarial',
     icon: '📦',
     color: '#2478CC',
+    comingSoon: true,
     docsUrl: 'https://www.contentful.com/developers/docs/',
     fields: [
       { id: 'space_id', label: 'Space ID', placeholder: 'xxx', type: 'text', required: true },
@@ -121,6 +127,7 @@ export const platforms: Platform[] = [
     description: 'Headless CMS open-source',
     icon: '🚀',
     color: '#8E75FF',
+    comingSoon: true,
     docsUrl: 'https://docs.strapi.io/dev-docs/api/rest',
     fields: [
       { id: 'url', label: 'Strapi URL', placeholder: 'https://seu-strapi.com', type: 'url', required: true },
@@ -134,6 +141,7 @@ export const platforms: Platform[] = [
     description: 'Blog integrado à loja Shopify',
     icon: '🛒',
     color: '#96BF48',
+    comingSoon: true,
     docsUrl: 'https://shopify.dev/docs/api/admin-rest',
     fields: [
       { id: 'store_url', label: 'Store URL', placeholder: 'sua-loja.myshopify.com', type: 'url', required: true },
@@ -147,6 +155,7 @@ export const platforms: Platform[] = [
     description: 'Plataforma de sites e e-commerce',
     icon: '⬛',
     color: '#000000',
+    comingSoon: true,
     docsUrl: 'https://developers.squarespace.com/',
     fields: [
       { id: 'site_id', label: 'Site ID', placeholder: 'xxx', type: 'text', required: true },
@@ -159,6 +168,7 @@ export const platforms: Platform[] = [
     description: 'CRM e marketing com blog integrado',
     icon: '🧡',
     color: '#FF7A59',
+    comingSoon: true,
     docsUrl: 'https://developers.hubspot.com/docs/api/cms/blog-posts',
     fields: [
       { id: 'access_token', label: 'Private App Token', placeholder: 'pat-xxx', type: 'password', required: true },
