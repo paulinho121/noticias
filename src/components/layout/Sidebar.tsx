@@ -97,7 +97,7 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
             <img
               src={settings.logo_url || "/logo.png"}
               alt={settings.app_name}
-              className="h-10 w-auto object-contain filter drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] invert dark:invert-0 transition-all duration-300"
+              className="h-10 w-auto object-contain filter drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] dark:invert transition-all duration-300"
             />
 
 
