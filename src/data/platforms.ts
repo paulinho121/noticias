@@ -42,6 +42,18 @@ export const platforms: Platform[] = [
     ]
   },
   {
+    id: 'custom_api',
+    name: 'Site Externo (PHP/API)',
+    description: 'Integre qualquer site customizado via API REST ou Webhooks',
+    icon: '🌐',
+    color: '#4B5563',
+    docsUrl: '/api-docs',
+    fields: [
+      { id: 'webhook_url', label: 'Webhook para Notificação', placeholder: 'https://seu-site.com/api/webhook.php', type: 'url', required: false },
+      { id: 'auth_header', label: 'Header de Autenticação (Opcional)', placeholder: 'X-API-Key: sua-chave', type: 'text', required: false },
+    ]
+  },
+  {
     id: 'framer',
     name: 'Framer',
     description: 'Plataforma de design e publicação moderna',
@@ -173,18 +185,6 @@ export const platforms: Platform[] = [
     fields: [
       { id: 'access_token', label: 'Private App Token', placeholder: 'pat-xxx', type: 'password', required: true },
       { id: 'content_group_id', label: 'Blog ID', placeholder: '123456789', type: 'text', required: true },
-    ]
-  },
-  {
-    id: 'custom_api',
-    name: 'Site Externo (PHP/API)',
-    description: 'Integre qualquer site customizado via API REST ou Webhooks',
-    icon: '🌐',
-    color: '#4B5563',
-    docsUrl: '/api-docs',
-    fields: [
-      { id: 'webhook_url', label: 'Webhook para Notificação', placeholder: 'https://seu-site.com/api/webhook.php', type: 'url', required: false },
-      { id: 'auth_header', label: 'Header de Autenticação (Opcional)', placeholder: 'X-API-Key: sua-chave', type: 'text', required: false },
     ]
   },
 ];
