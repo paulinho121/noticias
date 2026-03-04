@@ -108,8 +108,8 @@ export function Header({
           )}
 
           <div className="flex items-center gap-1 md:gap-2">
-            {/* Admin Message Button */}
-            {!isFounder && (
+            {/* Admin Message Button — apenas para o Founder */}
+            {isFounder && (
               <button
                 onClick={() => setIsNotificationModalOpen(true)}
                 className="group relative p-2 rounded-lg hover:bg-muted transition-all duration-200 border border-transparent hover:border-primary/20"
