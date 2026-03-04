@@ -71,8 +71,12 @@ function PixModal({ pixData, onClose, onExpired }: {
     useEffect(() => {
         const poll = async () => {
             try {
+                const { data: { session } } = await supabase.auth.getSession();
                 const { data } = await supabase.functions.invoke('check-pix-status', {
                     body: { paymentId: pixData.paymentId },
+                    headers: session?.access_token
+                        ? { Authorization: `Bearer ${session.access_token}` }
+                        : undefined,
                 });
                 if (data?.status === 'approved') {
                     setPixStatus('approved');
@@ -364,11 +368,12 @@ export function PremiumCheckout() {
     const handlePixCheckout = async (planId: string) => {
         setIsLoading(true);
         try {
-            const session = await getSession();
+            const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
             const { data, error } = await supabase.functions.invoke('create-pix-payment', {
-                body: { planId }
+                body: { planId },
+                headers: { Authorization: `Bearer ${session.access_token}` },
             });
 
             if (error) throw new Error(error.message);
