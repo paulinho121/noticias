@@ -22,7 +22,7 @@ export interface Feed {
   image_credit_text: string | null;
   include_source_link: boolean;
   enhance_scraped_image: boolean;
-  target_platform: 'wordpress' | 'blogger' | 'custom_api' | 'local';
+  target_platform: 'wordpress' | 'blogger' | 'wix' | 'custom_api' | 'local';
   created_at: string;
   updated_at: string;
 }
@@ -310,6 +310,15 @@ export const feedItemsApi = {
   async publishToBlogger(feedItemId: string): Promise<{ success: boolean; error?: string; email_id?: string }> {
     const { data, error } = await supabase.functions.invoke('publish-to-blogger', {
       body: { feedItemId },
+    });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async publishToWix(feedItemId: string, status?: string): Promise<{ success: boolean; error?: string; link?: string; wix_id?: string }> {
+    const { data, error } = await supabase.functions.invoke('publish-to-wix', {
+      body: { feedItemId, status },
     });
 
     if (error) throw error;
