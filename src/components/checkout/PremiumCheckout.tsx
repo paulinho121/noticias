@@ -456,15 +456,20 @@ export function PremiumCheckout() {
                         <button
                             onClick={() => setPaymentMethod('pix')}
                             className={cn(
-                                "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300",
+                                "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300",
                                 paymentMethod === 'pix'
                                     ? "bg-[#00B386] text-white shadow-lg shadow-[#00B386]/30 scale-[1.02]"
                                     : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                             )}
                         >
-                            <QrCode className="w-4 h-4" />
-                            PIX
-                            <span className="text-[10px] font-black bg-white/20 px-1.5 py-0.5 rounded-full">
+                            <QrCode className="w-4 h-4 shrink-0" />
+                            <span>PIX</span>
+                            <span className={cn(
+                                "text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none",
+                                paymentMethod === 'pix'
+                                    ? "bg-white/25 text-white"
+                                    : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                            )}>
                                 À VISTA
                             </span>
                         </button>
