@@ -433,24 +433,25 @@ export function PremiumCheckout() {
                     </p>
                 </div>
 
-                {/* Payment Method Selector */}
+                {/* Payment Method Selector + PIX Banner */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="flex justify-center"
+                    className="flex flex-col items-center gap-3"
                 >
-                    <div className="flex items-center gap-1 p-1 rounded-2xl bg-card border border-border/50 shadow-inner">
+                    {/* Tab Switcher */}
+                    <div className="flex items-center gap-1 p-1 rounded-2xl bg-card border border-border/50 shadow-sm">
                         <button
                             onClick={() => setPaymentMethod('card')}
                             className={cn(
                                 "flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300",
                                 paymentMethod === 'card'
-                                    ? "bg-primary text-white shadow-lg shadow-primary/30 scale-[1.02]"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                             )}
                         >
-                            <CreditCard className="w-4 h-4" />
+                            <CreditCard className="w-4 h-4 shrink-0" />
                             Cartão / Assinatura
                         </button>
                         <button
@@ -458,8 +459,8 @@ export function PremiumCheckout() {
                             className={cn(
                                 "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300",
                                 paymentMethod === 'pix'
-                                    ? "bg-[#00B386] text-white shadow-lg shadow-[#00B386]/30 scale-[1.02]"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                                    ? "bg-[#00B386] text-white shadow-lg shadow-[#00B386]/30"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                             )}
                         >
                             <QrCode className="w-4 h-4 shrink-0" />
@@ -474,24 +475,25 @@ export function PremiumCheckout() {
                             </span>
                         </button>
                     </div>
-                </motion.div>
 
-                {/* PIX info banner */}
-                <AnimatePresence>
-                    {paymentMethod === 'pix' && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                            animate={{ opacity: 1, height: 'auto', marginTop: -24 }}
-                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                            className="flex items-center justify-center gap-3 px-5 py-3 rounded-2xl bg-[#00B386]/10 border border-[#00B386]/20 max-w-lg mx-auto"
-                        >
-                            <Zap className="w-4 h-4 text-[#00B386] shrink-0" />
-                            <p className="text-sm text-[#00B386] font-medium">
-                                Pagamento único à vista — ativação automática em segundos após a confirmação do PIX.
-                            </p>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                    {/* PIX info banner */}
+                    <AnimatePresence>
+                        {paymentMethod === 'pix' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-[#00B386]/10 border border-[#00B386]/25 max-w-md w-full"
+                            >
+                                <Zap className="w-4 h-4 text-[#00B386] shrink-0" />
+                                <p className="text-sm text-[#00B386] font-medium leading-snug">
+                                    Pagamento único à vista — ativação automática em segundos após a confirmação do PIX.
+                                </p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
 
                 {/* Plans */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
