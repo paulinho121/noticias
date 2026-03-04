@@ -25,7 +25,8 @@ import {
   Star,
   Eye,
   EyeOff,
-  Pencil
+  Pencil,
+  Loader2
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -126,10 +127,95 @@ export default function Settings() {
   const [errorAlerts, setErrorAlerts] = useState(true);
   const [publishedAlerts, setPublishedAlerts] = useState(false);
   const [notificationEmail, setNotificationEmail] = useState('');
+  const [isSavingNotif, setIsSavingNotif] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [isEditingKey, setIsEditingKey] = useState<Record<string, boolean>>({});
 
+  // Load notification prefs from DB
+  useEffect(() => {
+    const loadNotifPrefs = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data: member } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      if (!member?.organization_id) return;
+      const { data: org } = await (supabase as any)
+        .from('organizations')
+        .select('notif_email, notif_error_alerts, notif_published, notif_email_address')
+        .eq('id', member.organization_id)
+        .maybeSingle();
+      if (org) {
+        setEmailNotifications(org.notif_email ?? true);
+        setErrorAlerts(org.notif_error_alerts ?? true);
+        setPublishedAlerts(org.notif_published ?? false);
+        setNotificationEmail(org.notif_email_address || '');
+      }
+    };
+    loadNotifPrefs();
+  }, []);
 
+  const handleSaveNotifications = async () => {
+    setIsSavingNotif(true);
+    const tid = toast.loading('Salvando preferências de notificação...');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão expirada.');
+      const { data: member } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      if (!member?.organization_id) throw new Error('Organização não encontrada.');
+      const { error } = await (supabase as any)
+        .from('organizations')
+        .update({
+          notif_email: emailNotifications,
+          notif_error_alerts: errorAlerts,
+          notif_published: publishedAlerts,
+          notif_email_address: notificationEmail || null,
+        })
+        .eq('id', member.organization_id);
+      if (error) throw error;
+      toast.success('Preferências de notificação salvas!', { id: tid });
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + e.message, { id: tid });
+    } finally {
+      setIsSavingNotif(false);
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!notificationEmail) {
+      toast.error('Informe um e-mail antes de testar.');
+      return;
+    }
+    setIsSendingTest(true);
+    const tid = toast.loading('Enviando e-mail de teste...');
+    try {
+      const { data, error } = await supabase.functions.invoke('send-notification-email', {
+        body: {
+          type: 'daily_summary',
+          data: {
+            to_email: notificationEmail,
+            posts_generated: 12,
+            posts_published: 9,
+            errors: 0,
+          }
+        }
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error || 'Falha ao enviar.');
+      toast.success('E-mail de teste enviado! Verifique sua caixa de entrada.', { id: tid });
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message, { id: tid });
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   const { settings: connections, isLoading, saveSettings, disconnectPlatform } = usePlatformSettings();
 
@@ -841,10 +927,15 @@ export default function Settings() {
           {/* Notification Settings */}
           <TabsContent value="notifications" className="space-y-6">
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Bell className="w-5 h-5 text-primary" />
-                Preferências de Notificação
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  Preferências de Notificação
+                </h3>
+                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold">
+                  Via E-mail (Resend)
+                </span>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
@@ -858,29 +949,57 @@ export default function Settings() {
                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium text-sm">Alertas de Erro</p>
-                    <p className="text-xs text-muted-foreground">Notificar imediatamente quando houver falhas</p>
+                    <p className="text-xs text-muted-foreground">Notificar imediatamente quando houver falhas no sistema</p>
                   </div>
-                  <Switch checked={errorAlerts} onCheckedChange={setErrorAlerts} />
+                  <Switch checked={errorAlerts} onCheckedChange={setErrorAlerts} disabled={!emailNotifications} />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium text-sm">Posts Publicados</p>
-                    <p className="text-xs text-muted-foreground">Notificar quando um post for publicado</p>
+                    <p className="text-xs text-muted-foreground">Notificar quando um post for publicado com sucesso</p>
                   </div>
-                  <Switch checked={publishedAlerts} onCheckedChange={setPublishedAlerts} />
+                  <Switch checked={publishedAlerts} onCheckedChange={setPublishedAlerts} disabled={!emailNotifications} />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email para Notificações</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={notificationEmail}
-                    onChange={(e) => setNotificationEmail(e.target.value)}
-                  />
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="notif-email">Email para Notificações</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="notif-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={notificationEmail}
+                      onChange={(e) => setNotificationEmail(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleSendTestEmail}
+                      disabled={isSendingTest || !notificationEmail}
+                      className="gap-2 border-primary/20 text-primary hover:bg-primary/5 shrink-0"
+                    >
+                      {isSendingTest
+                        ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Enviando...</>
+                        : <><Zap className="w-3.5 h-3.5" /> Testar</>}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Um e-mail de teste será enviado para confirmar que a integração está funcionando.
+                  </p>
                 </div>
+              </div>
+
+              <div className="flex justify-end mt-6 pt-4 border-t border-border/40">
+                <Button
+                  onClick={handleSaveNotifications}
+                  disabled={isSavingNotif}
+                  className="gap-2 px-6"
+                >
+                  {isSavingNotif
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
+                    : <><Save className="w-4 h-4" /> Salvar Alertas</>}
+                </Button>
               </div>
             </div>
           </TabsContent>
