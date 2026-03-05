@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Key,
   Globe,
@@ -26,7 +26,23 @@ import {
   Eye,
   EyeOff,
   Pencil,
-  Loader2
+  Loader2,
+  User,
+  Camera,
+  Mail,
+  Phone,
+  Building2,
+  KeyRound,
+  AlertTriangle,
+  CheckCircle2,
+  HeadphonesIcon,
+  MessageSquare,
+  BookOpen,
+  Video,
+  Send,
+  RefreshCw,
+  Copy,
+  LogOut
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -84,6 +100,123 @@ export default function Settings() {
   };
   const { settings: wlSettings, refreshSettings } = useWhiteLabel();
   const { subscription, loading: subLoading } = useSubscription();
+
+  // ── Profile State ──────────────────────────────────────────────────
+  const [profileUser, setProfileUser] = useState<any>(null);
+  const [profileName, setProfileName] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileCompany, setProfileCompany] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [avatarSeed, setAvatarSeed] = useState('');
+
+  // ── Security State ─────────────────────────────────────────────────
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [isChangingPwd, setIsChangingPwd] = useState(false);
+  const [pwdStrength, setPwdStrength] = useState(0);
+
+  // ── Support State ──────────────────────────────────────────────────
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportCategory, setSupportCategory] = useState('general');
+  const [isSendingTicket, setIsSendingTicket] = useState(false);
+  const [ticketSent, setTicketSent] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const u = session?.user;
+      if (u) {
+        setProfileUser(u);
+        setProfileName(u.user_metadata?.full_name || '');
+        setProfileBio(u.user_metadata?.bio || '');
+        setProfilePhone(u.user_metadata?.phone || '');
+        setProfileCompany(u.user_metadata?.company || '');
+        setAvatarSeed(u.email || 'user');
+      }
+    });
+  }, []);
+
+  const calcPwdStrength = (pwd: string) => {
+    let s = 0;
+    if (pwd.length >= 8) s++;
+    if (pwd.length >= 12) s++;
+    if (/[A-Z]/.test(pwd)) s++;
+    if (/[0-9]/.test(pwd)) s++;
+    if (/[^A-Za-z0-9]/.test(pwd)) s++;
+    setPwdStrength(s);
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    const tid = toast.loading('Salvando perfil...');
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: profileName,
+          bio: profileBio,
+          phone: profilePhone,
+          company: profileCompany,
+        }
+      });
+      if (error) throw error;
+      toast.success('Perfil salvo com sucesso!', { id: tid });
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message, { id: tid });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('As senhas não coincidem!');
+      return;
+    }
+    if (pwdStrength < 3) {
+      toast.error('A senha é muito fraca. Use letras maiúsculas, números e símbolos.');
+      return;
+    }
+    setIsChangingPwd(true);
+    const tid = toast.loading('Atualizando senha...');
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Senha atualizada com sucesso!', { id: tid });
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+      setPwdStrength(0);
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message, { id: tid });
+    } finally {
+      setIsChangingPwd(false);
+    }
+  };
+
+  const handleSendTicket = async () => {
+    if (!supportSubject || !supportMessage) {
+      toast.error('Preencha assunto e mensagem.');
+      return;
+    }
+    setIsSendingTicket(true);
+    const tid = toast.loading('Enviando ticket...');
+    try {
+      // Log to DB as support ticket (best-effort)
+      await supabase.from('logs' as any).insert({
+        level: 'info',
+        message: `[SUPORTE][${supportCategory.toUpperCase()}] ${supportSubject}: ${supportMessage}`,
+      }).throwOnError();
+      toast.success('Ticket enviado! Nossa equipe responderá em até 24h.', { id: tid });
+      setSupportSubject(''); setSupportMessage(''); setTicketSent(true);
+    } catch (e: any) {
+      toast.error('Erro ao criar ticket: ' + e.message, { id: tid });
+    } finally {
+      setIsSendingTicket(false);
+    }
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const { theme, setTheme } = useTheme();
@@ -458,6 +591,32 @@ export default function Settings() {
             >
               <CreditCard className="w-4 h-4" />
               Assinatura
+            </TabsTrigger>
+
+            <div className="hidden md:block w-px h-6 bg-border/40 mx-1" />
+
+            <TabsTrigger
+              value="profile"
+              className="px-3 md:px-5 py-2.5 gap-2.5 text-xs md:text-sm font-bold rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:bg-muted/50 group"
+            >
+              <User className="w-4 h-4 transition-transform group-hover:scale-110" />
+              Perfil
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="security"
+              className="px-3 md:px-5 py-2.5 gap-2.5 text-xs md:text-sm font-bold rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:bg-muted/50 group"
+            >
+              <Shield className="w-4 h-4 transition-transform group-hover:scale-110" />
+              Segurança
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="support"
+              className="px-3 md:px-5 py-2.5 gap-2.5 text-xs md:text-sm font-bold rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:bg-muted/50 group"
+            >
+              <HeadphonesIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+              Suporte
             </TabsTrigger>
           </TabsList>
 
@@ -924,6 +1083,414 @@ export default function Settings() {
           {/* Billing Settings */}
           <TabsContent value="billing" className="space-y-6">
             <SubscriptionContent />
+          </TabsContent>
+
+          {/* ── MEU PERFIL ─────────────────────────────────────────────── */}
+          <TabsContent value="profile" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* Avatar Card */}
+              <div className="glass-card p-6">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                  <div className="relative group shrink-0">
+                    <div className="absolute -inset-1 bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500" />
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-background shadow-2xl bg-muted">
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setAvatarSeed(Math.random().toString(36).slice(2))}
+                      className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                      title="Gerar novo avatar"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 w-full space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-black text-foreground">{profileName || 'Usuário'}</h3>
+                      <p className="text-sm text-muted-foreground">{profileUser?.email}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={cn(
+                        "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border",
+                        subscription?.plan_type === 'pro' ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                          subscription?.plan_type === 'enterprise' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                            "bg-muted text-muted-foreground border-border/40"
+                      )}>
+                        {subscription?.plan_type === 'pro' ? '⚡ Premium PRO' :
+                          subscription?.plan_type === 'enterprise' ? '🏆 Enterprise' :
+                            '🎟 Free Trial'}
+                      </span>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(profileUser?.id || ''); toast.success('ID copiado!'); }}
+                        className="text-[10px] font-bold px-3 py-1 rounded-full bg-primary/5 border border-primary/20 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1.5"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copiar ID
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="glass-card p-6 space-y-5">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  Informações Pessoais
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-name">Nome Completo</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="profile-name"
+                        value={profileName}
+                        onChange={e => setProfileName(e.target.value)}
+                        placeholder="Seu nome"
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-email">E-mail</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="profile-email"
+                        value={profileUser?.email || ''}
+                        disabled
+                        className="pl-10 opacity-60 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-phone">Telefone / WhatsApp</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="profile-phone"
+                        value={profilePhone}
+                        onChange={e => setProfilePhone(e.target.value)}
+                        placeholder="+55 11 99999-9999"
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-company">Empresa / Organização</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="profile-company"
+                        value={profileCompany}
+                        onChange={e => setProfileCompany(e.target.value)}
+                        placeholder="Nome da empresa"
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="profile-bio">Biografia / Sobre</Label>
+                  <Textarea
+                    id="profile-bio"
+                    value={profileBio}
+                    onChange={e => setProfileBio(e.target.value)}
+                    placeholder="Conte um pouco sobre você ou sua empresa..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                    className="gap-2 px-6"
+                  >
+                    {isSavingProfile
+                      ? <><Loader2 className="w-4 h-4 animate-spin" />Salvando...</>
+                      : <><Save className="w-4 h-4" />Salvar Perfil</>}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          {/* ── SEGURANÇA ──────────────────────────────────────────────── */}
+          <TabsContent value="security" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* Password Change */}
+              <div className="glass-card p-6 space-y-5">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-primary" />
+                  Alterar Senha
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">Nova Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showNewPwd ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={e => { setNewPassword(e.target.value); calcPwdStrength(e.target.value); }}
+                        placeholder="Mínimo 8 caracteres"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPwd(p => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                      >
+                        {showNewPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {/* Strength Meter */}
+                    {newPassword && (
+                      <div className="space-y-1.5">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className={cn(
+                              "h-1.5 flex-1 rounded-full transition-all duration-300",
+                              i <= pwdStrength
+                                ? pwdStrength <= 2 ? 'bg-destructive'
+                                  : pwdStrength <= 3 ? 'bg-amber-500'
+                                    : 'bg-emerald-500'
+                                : 'bg-muted'
+                            )} />
+                          ))}
+                        </div>
+                        <p className={cn(
+                          "text-[10px] font-bold",
+                          pwdStrength <= 2 ? 'text-destructive' : pwdStrength <= 3 ? 'text-amber-500' : 'text-emerald-500'
+                        )}>
+                          {pwdStrength <= 1 ? 'Muito fraca' : pwdStrength <= 2 ? 'Fraca' : pwdStrength <= 3 ? 'Razoável' : pwdStrength <= 4 ? 'Forte' : 'Muito forte ✓'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showConfirmPwd ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        placeholder="Repita a nova senha"
+                        className={cn('pr-10', confirmPassword && newPassword !== confirmPassword && 'border-destructive/70 focus-visible:ring-destructive/30')}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPwd(p => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                      >
+                        {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-[11px] text-destructive flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> As senhas não coincidem
+                      </p>
+                    )}
+                    {confirmPassword && newPassword === confirmPassword && (
+                      <p className="text-[11px] text-emerald-500 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Senhas coincidem
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={handleChangePassword}
+                    disabled={isChangingPwd || !newPassword || !confirmPassword}
+                    className="gap-2 px-6"
+                  >
+                    {isChangingPwd
+                      ? <><Loader2 className="w-4 h-4 animate-spin" />Atualizando...</>
+                      : <><KeyRound className="w-4 h-4" />Atualizar Senha</>}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Session Info */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  Sessão Atual
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { label: 'E-mail verificado', value: profileUser?.email_confirmed_at ? 'Sim ✓' : 'Não', ok: !!profileUser?.email_confirmed_at },
+                    { label: 'Provedor de login', value: profileUser?.app_metadata?.provider || 'email', ok: true },
+                    { label: 'Membro desde', value: profileUser?.created_at ? new Date(profileUser.created_at).toLocaleDateString('pt-BR') : '—', ok: true },
+                    { label: 'Último login', value: profileUser?.last_sign_in_at ? new Date(profileUser.last_sign_in_at).toLocaleString('pt-BR') : '—', ok: true },
+                  ].map(item => (
+                    <div key={item.label} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/30">
+                      <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
+                      <span className={cn('text-xs font-bold', item.ok ? 'text-foreground' : 'text-destructive')}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-border/30">
+                  <p className="text-xs text-muted-foreground mb-3">Deseja encerrar esta sessão?</p>
+                  <Button
+                    variant="destructive"
+                    className="gap-2"
+                    onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login'; }}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Encerrar Sessão
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          {/* ── SUPORTE TÉCNICO ────────────────────────────────────────── */}
+          <TabsContent value="support" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* Quick Links */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: BookOpen, label: 'Documentação', desc: 'Guias e tutoriais', color: 'text-blue-400', bg: 'bg-blue-500/10', href: 'https://docs.example.com' },
+                  { icon: Video, label: 'Vídeo Tutoriais', desc: 'Aprenda assistindo', color: 'text-purple-400', bg: 'bg-purple-500/10', href: '#' },
+                  { icon: MessageSquare, label: 'Chat ao Vivo', desc: 'Respostas rápidas', color: 'text-emerald-400', bg: 'bg-emerald-500/10', href: '#' },
+                ].map(item => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-card p-5 flex flex-col gap-3 hover:border-primary/30 transition-all duration-200 group cursor-pointer"
+                  >
+                    <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110', item.bg)}>
+                      <item.icon className={cn('w-5 h-5', item.color)} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 self-end mt-auto group-hover:text-primary transition-colors" />
+                  </a>
+                ))}
+              </div>
+
+              {/* Ticket Form */}
+              {ticketSent ? (
+                <div className="glass-card p-8 flex flex-col items-center gap-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                  </div>
+                  <h3 className="text-lg font-black text-foreground">Ticket Enviado!</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm">
+                    Nossa equipe de suporte recebeu sua mensagem e responderá em até <strong>24 horas úteis</strong>.
+                  </p>
+                  <Button variant="outline" onClick={() => setTicketSent(false)} className="gap-2 mt-2">
+                    <RefreshCw className="w-4 h-4" />
+                    Novo Ticket
+                  </Button>
+                </div>
+              ) : (
+                <div className="glass-card p-6 space-y-5">
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <HeadphonesIcon className="w-4 h-4 text-primary" />
+                    Abrir Ticket de Suporte
+                  </h3>
+
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <Select value={supportCategory} onValueChange={setSupportCategory}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">🔧 Suporte Geral</SelectItem>
+                        <SelectItem value="billing">💳 Faturamento e Planos</SelectItem>
+                        <SelectItem value="bug">🐛 Reportar Bug</SelectItem>
+                        <SelectItem value="feature">✨ Sugestão de Funcionalidade</SelectItem>
+                        <SelectItem value="integration">🔗 Integrações e API</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="support-subject">Assunto</Label>
+                    <Input
+                      id="support-subject"
+                      value={supportSubject}
+                      onChange={e => setSupportSubject(e.target.value)}
+                      placeholder="Descreva brevemente o problema..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="support-message">Mensagem Detalhada</Label>
+                    <Textarea
+                      id="support-message"
+                      value={supportMessage}
+                      onChange={e => setSupportMessage(e.target.value)}
+                      placeholder="Descreva o problema com o máximo de detalhes possível. Inclua prints, erros, comportamento esperado vs atual..."
+                      rows={5}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-xs text-muted-foreground">
+                    <p className="font-bold text-foreground mb-1">📌 Antes de enviar:</p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      <li>Verifique nossa <span className="text-primary">documentação</span> para problemas comuns</li>
+                      <li>Inclua o <strong>ID da organização</strong> ao relatar problemas de dados</li>
+                      <li>Tempo médio de resposta: <strong>4–8 horas úteis</strong></li>
+                    </ul>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleSendTicket}
+                      disabled={isSendingTicket || !supportSubject || !supportMessage}
+                      className="gap-2 px-6"
+                    >
+                      {isSendingTicket
+                        ? <><Loader2 className="w-4 h-4 animate-spin" />Enviando...</>
+                        : <><Send className="w-4 h-4" />Enviar Ticket</>}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
           </TabsContent>
 
           {/* Notification Settings */}

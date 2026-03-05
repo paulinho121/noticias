@@ -69,8 +69,7 @@ export function SubscriptionContent() {
                         ) : (
                             <div className="space-y-2 text-center">
                                 <ShieldCheck className="w-8 h-8 text-primary mx-auto mb-2" />
-                                <p className="text-sm font-bold text-foreground">Assinatura Vitalícia / Ativa</p>
-                                <p className="text-[10px] text-muted-foreground">Próxima renovação: Automática</p>
+                                <p className="text-sm font-bold text-foreground">Assinatura Ativa</p>
                             </div>
                         )}
                     </div>
