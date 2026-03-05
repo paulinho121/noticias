@@ -167,7 +167,8 @@ class AIGateway {
               body: JSON.stringify({
                 model,
                 messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-                temperature: 0.4
+                temperature: 0.4,
+                response_format: { type: "json_object" }
               })
             });
           }
@@ -732,15 +733,23 @@ serve(async (req) => {
       viral: 'Hooks fortes, curto, focado em compartilhamento.',
     };
 
-    const systemPrompt = `${wl?.system_prompt || 'Você é um Editor-Chefe e Especialista em SEO de nível sênior.'} 
+    const basePrompt = (wl?.prompt_mode === 'custom' && wl?.system_prompt)
+      ? wl.system_prompt
+      : 'Você é um Editor-Chefe e Especialista em SEO de nível sênior, analítico e focado em retenção de audiência.';
+
+    const systemPrompt = `${basePrompt} 
       TONALIDADE: ${toneInstructions[item.feeds.writing_tone || 'journalistic']}
       ${item.feeds.custom_prompt ? `DIRETRIZES ADICIONAIS: ${item.feeds.custom_prompt}` : ''}
       ${item.feeds.generate_highlights ? `\nDESTAQUES (TL;DR): No início do campo 'content', adicione um resumo em 3 bullet points curtos usando formatacao HTML: <b>Destaques:</b><ul><li>Ponto 1</li><li>...</li></ul><br/>` : ''}
 
       MISSÃO:
       Sua tarefa é transformar o conteúdo original em um artigo IRRESISTÍVEL de nível Premium.
+      - Escreva um artigo JORNALÍSTICO completo, com profundidade e contexto.
+      - Extensão: Busque entre 500 e 800 palavras se o assunto permitir. Nunca faça apenas resumos curtos.
+      - Otimização SEO: Use palavras-chave naturalmente ao longo do texto.
+      - Tags & Keywords: Gere no mínimo 10 tags e 10 keywords focadas em termos de busca orgânica de alto volume.
       - Se for uma RECEITA: Mantenha a precisão técnica, organize ingredientes e preparo de forma impecável. Use a persona de um Chef de Cozinha.
-      - Se for NOTÍCIA: Use a pirâmide invertida, tom profissional e imparcial.
+      - Se for NOTÍCIA: Use a pirâmide invertida, tom profissional e imparcial. Inclua antecedentes e contexto histórico se relevante.
       - Se for DICA/GUIA: Use tom educativo, autoritário e organizado.
 
       REGRAS DE TÍTULO (CRÍTICO):

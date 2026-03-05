@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
     `CREATE POLICY "logs_tenant_select" ON public.logs FOR SELECT TO authenticated USING (organization_id = public.get_my_organization_strict() AND organization_id IS NOT NULL)`,
     `CREATE POLICY "logs_tenant_insert" ON public.logs FOR INSERT TO authenticated WITH CHECK (organization_id = public.get_my_organization_strict() AND organization_id IS NOT NULL)`,
     `ALTER TABLE public.feeds ADD COLUMN IF NOT EXISTS include_source_link BOOLEAN DEFAULT false`,
+    `ALTER TABLE public.white_label_settings ADD COLUMN IF NOT EXISTS prompt_mode TEXT DEFAULT 'system'`,
   ];
 
   const results = [];

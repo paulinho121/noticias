@@ -53,6 +53,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  RadioGroup,
+  RadioGroupItem
+} from '@/components/ui/radio-group';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -264,6 +268,7 @@ export default function Settings() {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [seoOptimized, setSeoOptimized] = useState(true);
   const [plagiarismCheck, setPlagiarismCheck] = useState(false);
+  const [promptMode, setPromptMode] = useState<'system' | 'custom'>('system');
 
   // Image Settings State
   const [extractImages, setExtractImages] = useState(true);
@@ -287,6 +292,7 @@ export default function Settings() {
       setImageSize(wlSettings.image_size || '1024x1024');
       setImageInstruction(wlSettings.image_instruction || '');
       setImageProvider(wlSettings.image_provider || 'dalle');
+      setPromptMode((wlSettings as any).prompt_mode || 'system');
     }
   }, [wlSettings]);
 
@@ -504,8 +510,9 @@ export default function Settings() {
         avoid_logo: avoidLogo,
         image_size: imageSize,
         image_instruction: imageInstruction,
-        image_provider: imageProvider
-      });
+        image_provider: imageProvider,
+        prompt_mode: promptMode
+      } as any);
 
       await refreshSettings();
       toast.success('Todas as configurações foram salvas!', { id: tid });
@@ -1006,18 +1013,55 @@ export default function Settings() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="system-prompt">Prompt do Sistema</Label>
+                <div className="space-y-4">
+                  <Label>Modo de Escrita (Pronta-Resposta)</Label>
+                  <RadioGroup value={promptMode} onValueChange={(v: any) => setPromptMode(v)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className={cn(
+                      "relative flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                      promptMode === 'system' ? "border-primary bg-primary/5 shadow-md" : "border-border/40 hover:border-border"
+                    )} onClick={() => setPromptMode('system')}>
+                      <RadioGroupItem value="system" id="mode-system" className="mt-1" />
+                      <div className="space-y-1">
+                        <Label htmlFor="mode-system" className="font-bold flex items-center gap-2 cursor-pointer">
+                          Motor Padrão
+                          <Badge className="bg-primary text-primary-foreground text-[10px] h-4">Recomendado</Badge>
+                        </Label>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Nossas instruções otimizadas para artigos longos (600+ palavras), negritos automáticos e SEO técnico completo.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={cn(
+                      "relative flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                      promptMode === 'custom' ? "border-primary bg-primary/5 shadow-md" : "border-border/40 hover:border-border"
+                    )} onClick={() => setPromptMode('custom')}>
+                      <RadioGroupItem value="custom" id="mode-custom" className="mt-1" />
+                      <div className="space-y-1">
+                        <Label htmlFor="mode-custom" className="font-bold cursor-pointer">Instruções Personalizadas</Label>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Usa o seu "Prompt do Sistema" abaixo como base principal para a reescrita dos conteúdos.
+                        </p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className={cn("space-y-2 transition-all duration-300", promptMode === 'system' && "opacity-50 pointer-events-none")}>
+                  <Label htmlFor="system-prompt" className="flex items-center gap-2">
+                    Prompt do Sistema (Instrução Base)
+                    {promptMode === 'system' && <Badge variant="secondary" className="text-[10px]">Inativo no Modo Padrão</Badge>}
+                  </Label>
                   <Textarea
                     id="system-prompt"
                     rows={4}
-                    placeholder="Você é um redator profissional especializado em..."
-                    className="font-mono text-sm"
+                    placeholder="Ex: Você é um jornalista especializado em tecnologia..."
+                    className="font-mono text-sm bg-muted/20"
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instruções base que serão enviadas junto com cada requisição
+                    Define a personalidade e diretrizes específicas que a IA deve seguir.
                   </p>
                 </div>
 
