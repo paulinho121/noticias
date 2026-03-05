@@ -429,6 +429,7 @@ export default function Settings() {
 
 
 
+            {/* TODO: Alertas — implementação futura
             <TabsTrigger
               value="notifications"
               className="px-3 md:px-5 py-2.5 gap-2.5 text-xs md:text-sm font-bold rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:bg-muted/50"
@@ -437,6 +438,7 @@ export default function Settings() {
               <span className="hidden xs:inline">Avisos</span>
               <span className="xs:hidden">Alertas</span>
             </TabsTrigger>
+            */}
 
             <div className="hidden md:block w-px h-6 bg-border/40 mx-1" />
 
