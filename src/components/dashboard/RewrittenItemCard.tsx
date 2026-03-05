@@ -760,14 +760,14 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
             </Dialog >
 
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 bg-background/95 backdrop-blur-xl border-white/5">
-                    <DialogHeader className="p-8 border-b border-white/5 shrink-0 flex flex-row items-center justify-between space-y-0 bg-zinc-950">
+                <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 bg-background/95 backdrop-blur-xl border-white/5">
+                    <DialogHeader className="p-4 md:p-8 border-b border-white/5 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 bg-zinc-950">
                         <div className="flex flex-col gap-1">
-                            <DialogTitle className="text-2xl font-black flex items-center gap-3 text-white">
-                                <Monitor className="w-6 h-6 text-primary" />
-                                PRÉ-VISUALIZAÇÃO DA POSTAGEM
+                            <DialogTitle className="text-lg md:text-2xl font-black flex items-center gap-3 text-white">
+                                <Monitor className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+                                PRÉ-VISUALIZAÇÃO
                             </DialogTitle>
-                            <DialogDescription className="text-white/40 font-medium">
+                            <DialogDescription className="text-white/40 font-medium text-xs md:text-sm">
                                 Revise o conteúdo antes de publicar.
                             </DialogDescription>
                         </div>
@@ -784,7 +784,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                         </Button>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-black">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-10 bg-black">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* LEFT SIDE: SOURCE */}
                             <div className="space-y-4">

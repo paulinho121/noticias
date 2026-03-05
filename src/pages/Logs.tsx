@@ -116,8 +116,8 @@ export default function Logs() {
 
       <div className="p-4 md:p-8 space-y-4 md:space-y-6">
         {/* Filters */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2 md:gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 md:gap-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>

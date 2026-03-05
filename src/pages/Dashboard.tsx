@@ -148,9 +148,9 @@ export default function Dashboard() {
         </div>
 
         {/* Bottom Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Recent Activity */}
-          <div className="lg:col-span-2 bg-white dark:bg-card shadow-sm border border-border/50 rounded-2xl p-6 overflow-hidden">
+          <div className="lg:col-span-2 bg-card shadow-sm border border-border/50 rounded-2xl p-4 md:p-6 overflow-hidden">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-foreground">Atividade Recente</h3>
               <a href="/logs" className="px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary hover:bg-primary/20 transition-all">Ver todos</a>
@@ -184,7 +184,7 @@ export default function Dashboard() {
           </div>
 
           {/* Upcoming Schedules */}
-          <div className="bg-white dark:bg-card shadow-sm border border-border/50 rounded-2xl p-6">
+          <div className="bg-card shadow-sm border border-border/50 rounded-2xl p-4 md:p-6">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-foreground">Próximos Agendamentos</h3>
               <a href="/schedules" className="px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary hover:bg-primary/20 transition-all">Ver todos</a>

@@ -43,7 +43,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Sidebar collapsed={false} setCollapsed={() => { }} mobile={true} />
             </SheetContent>
           </Sheet>
-          <span className="font-bold text-base tracking-tight text-foreground">
+          <span className="font-bold text-base tracking-tight text-foreground truncate max-w-[160px] xs:max-w-[220px]">
             {settings.app_name}
           </span>
         </div>
