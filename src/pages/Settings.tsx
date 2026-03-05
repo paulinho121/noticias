@@ -109,6 +109,8 @@ export default function Settings() {
   const [profileCompany, setProfileCompany] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [avatarSeed, setAvatarSeed] = useState('');
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // ── Security State ─────────────────────────────────────────────────
   const [currentPassword, setCurrentPassword] = useState('');
@@ -137,9 +139,41 @@ export default function Settings() {
         setProfilePhone(u.user_metadata?.phone || '');
         setProfileCompany(u.user_metadata?.company || '');
         setAvatarSeed(u.email || 'user');
+        setProfileAvatarUrl(u.user_metadata?.avatar_url || '');
       }
     });
   }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profileUser) return;
+
+    try {
+      setIsUploadingAvatar(true);
+      const tid = toast.loading('Enviando foto de perfil...');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profileUser.id}/${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, { upsert: true });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      setProfileAvatarUrl(publicUrl);
+      toast.success('Foto de perfil enviada!', { id: tid });
+    } catch (error: any) {
+      toast.error('Erro no upload: ' + error.message);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const calcPwdStrength = (pwd: string) => {
     let s = 0;
@@ -161,6 +195,7 @@ export default function Settings() {
           bio: profileBio,
           phone: profilePhone,
           company: profileCompany,
+          avatar_url: profileAvatarUrl,
         }
       });
       if (error) throw error;
@@ -1100,18 +1135,32 @@ export default function Settings() {
                     <div className="absolute -inset-1 bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500" />
                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-background shadow-2xl bg-muted">
                       <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
+                        src={profileAvatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
                         alt="Avatar"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <button
-                      onClick={() => setAvatarSeed(Math.random().toString(36).slice(2))}
-                      className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                      title="Gerar novo avatar"
-                    >
-                      <Camera className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="absolute -bottom-1 -right-1 flex gap-1">
+                      <button
+                        onClick={() => setAvatarSeed(Math.random().toString(36).slice(2))}
+                        className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                        title="Randomizar avatar"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                      <label
+                        className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                        title="Fazer upload de foto"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
                   </div>
 
                   <div className="flex-1 w-full space-y-4">
@@ -1382,8 +1431,8 @@ export default function Settings() {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              {/* Quick Links */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Quick Links — oculto, melhoria futura */}
+              <div className="hidden">
                 {[
                   { icon: BookOpen, label: 'Documentação', desc: 'Guias e tutoriais', color: 'text-blue-400', bg: 'bg-blue-500/10', href: 'https://docs.example.com' },
                   { icon: Video, label: 'Vídeo Tutoriais', desc: 'Aprenda assistindo', color: 'text-purple-400', bg: 'bg-purple-500/10', href: '#' },

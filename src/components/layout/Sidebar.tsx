@@ -278,7 +278,7 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
             )}>
               <div className="relative shrink-0">
                 <Avatar className="w-9 h-9 border border-border/50 group-hover:border-primary/50 transition-colors">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'Admin'}`} />
+                  <AvatarImage src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'Admin'}`} />
                   <AvatarFallback>{(user?.email || 'U').charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success border-2 border-sidebar-background" />
@@ -314,7 +314,7 @@ export function Sidebar({ collapsed, setCollapsed, mobile = false, className }: 
                 <div className="relative group/avatar">
                   <div className="absolute -inset-1.5 bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur opacity-40 group-hover/avatar:opacity-70 transition duration-500" />
                   <Avatar className="w-20 h-20 border-2 border-background shadow-2xl relative">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'Admin'}`} className="bg-muted" />
+                    <AvatarImage src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'Admin'}`} className="bg-muted" />
                     <AvatarFallback className="bg-primary/10 text-primary font-black text-xl">{(user?.email || 'U').charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
 
