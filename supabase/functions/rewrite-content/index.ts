@@ -99,7 +99,7 @@ class AIGateway {
 
   constructor(supabase: any) {
     this.supabase = supabase;
-    this.gems = ['gemini-2.0-flash'];
+    this.gems = ['gemini-2.5-flash'];
     this.openais = ['gpt-4o', 'gpt-4o-mini'];
   }
 
@@ -146,7 +146,7 @@ class AIGateway {
       // Force upgrade of legacy/problematic models for Gemini
       if (p === 'gemini') {
         currentModels = currentModels.map(m => {
-          if (m.includes('gemini-1.5') || m.includes('gemini-pro') || m === 'gemini-pro') return 'gemini-2.0-flash';
+          if (m.includes('gemini-1.5') || m.includes('gemini-2.0') || m.includes('gemini-pro') || m === 'gemini-pro') return 'gemini-2.5-flash';
           return m;
         });
       }

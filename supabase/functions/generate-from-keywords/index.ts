@@ -127,7 +127,7 @@ serve(async (req) => {
     } else if (GEMINI_API_KEY) {
       console.log(`[Generate] Using Gemini for: ${keywords}`);
       
-      const models = ['gemini-2.0-flash'];
+      const models = ['gemini-2.5-flash'];
       let lastErr = "";
       
       const requestedModels = (feed.ai_model && feed.ai_model.includes('gemini')) 
@@ -135,7 +135,7 @@ serve(async (req) => {
         : models;
 
       // Force upgrade of legacy models
-      const finalModels = [...new Set(requestedModels.map(m => (m.includes('gemini-1.5') || m.includes('gemini-pro') || m === 'gemini-pro') ? 'gemini-2.0-flash' : m))];
+      const finalModels = [...new Set(requestedModels.map(m => (m.includes('gemini-1.5') || m.includes('gemini-2.0') || m.includes('gemini-pro') || m === 'gemini-pro') ? 'gemini-2.5-flash' : m))];
 
       for (const model of finalModels) {
         try {

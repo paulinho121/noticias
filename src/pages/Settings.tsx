@@ -263,7 +263,7 @@ export default function Settings() {
   const { palette, setPalette } = usePalette();
 
   // AI Settings State
-  const [aiModel, setAiModel] = useState('gemini-2.0-flash');
+  const [aiModel, setAiModel] = useState('gemini-2.5-flash');
   const [aiProvider, setAiProvider] = useState('gemini');
   const [writingTone, setWritingTone] = useState('professional');
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -282,9 +282,9 @@ export default function Settings() {
   // Load settings from context
   useEffect(() => {
     if (wlSettings) {
-      const model = wlSettings.ai_model || 'gemini-2.0-flash';
-      // Normalize to 2.0-flash if it's a legacy model
-      setAiModel((model.includes('gemini-1.5') || model.includes('gemini-pro') || model === 'gemini-pro') ? 'gemini-2.0-flash' : model);
+      const model = wlSettings.ai_model || 'gemini-2.5-flash';
+      // Normalize to 2.5-flash if it's a legacy model
+      setAiModel((model.includes('gemini-1.5') || model.includes('gemini-2.0') || model.includes('gemini-pro') || model === 'gemini-pro') ? 'gemini-2.5-flash' : model);
       setAiProvider((wlSettings as any).ai_provider || 'gemini');
       setWritingTone(wlSettings.writing_tone || 'professional');
       setSystemPrompt(wlSettings.system_prompt || '');
@@ -1040,7 +1040,7 @@ export default function Settings() {
                       <SelectContent>
                         {aiProvider === 'gemini' ? (
                           <>
-                            <SelectItem value="gemini-2.0-flash">Google Gemini 2.0 Flash (Recomendado)</SelectItem>
+                            <SelectItem value="gemini-2.5-flash">Google Gemini 2.5 Flash (Recomendado)</SelectItem>
                           </>
                         ) : (
                           <>

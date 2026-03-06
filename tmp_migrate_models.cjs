@@ -15,22 +15,22 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function migrateModels() {
-    console.log('Iniciando migração FORÇADA de modelos de IA para gemini-2.0-flash...');
+    console.log('Iniciando migração FORÇADA de modelos de IA para gemini-2.5-flash...');
 
     try {
         // 1. Forçar em white_label_settings
         console.log('Atualizando configurações white label...');
         const { data: wlData, error: wlError } = await supabase
         .from('white_label_settings')
-        .update({ ai_model: 'gemini-2.0-flash' })
-        // Apenas atualizar onde não for gemini-2.0-flash
-        .neq('ai_model', 'gemini-2.0-flash')
+        .update({ ai_model: 'gemini-2.5-flash' })
+        // Apenas atualizar onde não for gemini-2.5-flash
+        .neq('ai_model', 'gemini-2.5-flash')
         .select();
 
         if (wlError) {
             console.error('Erro ao atualizar white label:', wlError);
         } else {
-            console.log(`Forçados ${wlData?.length || 0} white_label_settings para gemini-2.0-flash`);
+            console.log(`Forçados ${wlData?.length || 0} white_label_settings para gemini-2.5-flash`);
         }
 
         // 2. Forçar em feeds (Verificando se a coluna existe e capturando o erro)
@@ -41,10 +41,10 @@ async function migrateModels() {
 
         if (feedsList) {
           for (const feed of feedsList) {
-            const { error: feedUpdateError } = await supabase.from('feeds').update({ ai_model: 'gemini-2.0-flash' }).eq('id', feed.id);
+            const { error: feedUpdateError } = await supabase.from('feeds').update({ ai_model: 'gemini-2.5-flash' }).eq('id', feed.id);
             if (!feedUpdateError) updatedFeedsCount++;
           }
-           console.log(`Forçados ${updatedFeedsCount} feeds para gemini-2.0-flash (Ignorado caso a tabela não possua a coluna).`);
+           console.log(`Forçados ${updatedFeedsCount} feeds para gemini-2.5-flash (Ignorado caso a tabela não possua a coluna).`);
         }
 
 
