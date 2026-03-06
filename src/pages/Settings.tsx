@@ -542,9 +542,20 @@ export default function Settings() {
   };
 
   const handleTest = async (platformId: string) => {
-    const conn = getConnection(platformId);
-    if (!conn || !conn.credentials) {
-      toast.error('Configure as credenciais antes de testar');
+    // Use a chave digitada se estiver em edição, senão use a salva
+    let testCredentials = getConnection(platformId)?.credentials;
+    const currentInput = apiKeys[platformId];
+
+    if (isEditingKey[platformId]) {
+      if (!currentInput) {
+        toast.error('Informe a chave no campo antes de testar.');
+        return;
+      }
+      testCredentials = { api_key: currentInput };
+    }
+
+    if (!testCredentials || !testCredentials.api_key) {
+      toast.error('Nenhuma chave ativa para testar.');
       return;
     }
 
@@ -555,7 +566,7 @@ export default function Settings() {
 
     try {
       const { data, error } = await supabase.functions.invoke('test-connection', {
-        body: { platformId, credentials: conn.credentials }
+        body: { platformId, credentials: testCredentials }
       });
 
       if (error) throw error;
@@ -573,6 +584,10 @@ export default function Settings() {
   const getConnection = (platformId: string): any | undefined => {
     const conn = connections.find((c: any) => c.platform_id === platformId);
     if (!conn) return undefined;
+    
+    // Se não estiver conectado, ignoramos as credenciais (evita erro de cache)
+    if (!conn.is_connected) return undefined;
+
     return {
       platformId: conn.platform_id,
       isConnected: conn.is_connected,

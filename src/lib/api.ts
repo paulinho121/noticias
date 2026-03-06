@@ -534,7 +534,10 @@ export const platformSettingsApi = {
 
     const { error } = await (supabase as any)
       .from('platform_settings')
-      .update({ is_connected: false })
+      .update({ 
+        is_connected: false,
+        credentials: {} 
+      })
       .eq('platform_id', platformId)
       .eq('user_id', currentUser.user.id);
 
