@@ -66,7 +66,7 @@ serve(async (req) => {
       const apiKey = finalCredentials.api_key;
       if (!apiKey) throw new Error('API Key do Gemini não encontrada.');
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`);
       const data = await response.json();
       
       if (!response.ok) {

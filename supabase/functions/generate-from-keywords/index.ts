@@ -127,13 +127,14 @@ serve(async (req) => {
     } else if (GEMINI_API_KEY) {
       console.log(`[Generate] Using Gemini for: ${keywords}`);
       
-      const models = ['gemini-1.5-flash', 'gemini-2.0-flash-exp', 'gemini-1.5-pro'];
+      const models = ['gemini-2.0-flash'];
       let lastErr = "";
       
       for (const model of models) {
         try {
           console.log(`[Generate] Trying Gemini model: ${model}`);
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+          const apiVersion = (model.includes('exp') || model.includes('beta')) ? 'v1beta' : 'v1';
+          const response = await fetch(`https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

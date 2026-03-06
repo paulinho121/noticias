@@ -99,7 +99,7 @@ class AIGateway {
 
   constructor(supabase: any) {
     this.supabase = supabase;
-    this.gems = ['gemini-1.5-flash', 'gemini-2.0-flash-exp', 'gemini-1.5-pro'];
+    this.gems = ['gemini-2.0-flash'];
     this.openais = ['gpt-4o', 'gpt-4o-mini'];
   }
 
@@ -151,8 +151,9 @@ class AIGateway {
           
           let resp;
           if (p === 'gemini') {
-            // Usar v1beta para garantir suporte a gemini-2.0-flash e modelos mais novos
-            resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            // Usar v1 para modelos estáveis e v1beta apenas se for explicitamente experimental
+            const apiVersion = (model.includes('exp') || model.includes('beta')) ? 'v1beta' : 'v1';
+            resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${key}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -241,7 +242,7 @@ Regras ABSOLUTAMENTE CRÍTICAS para o seu prompt em inglês:
       };
 
       const resp = await fetchWithTimeout(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) },
         30000
       );
@@ -372,7 +373,8 @@ Regras ABSOLUTAMENTE CRÍTICAS para o seu prompt em inglês:
                 parts.push({ text: finalPrompt });
             }
 
-            const resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            const apiVersion = (model.includes('exp') || model.includes('beta')) ? 'v1beta' : 'v1';
+            const resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${key}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -424,7 +426,8 @@ Regras ABSOLUTAMENTE CRÍTICAS para o seu prompt em inglês:
           for (const m of imageModels) {
             try {
               console.log(`Trying Imagen model: ${m} with prompt: ${finalPrompt.substring(0, 80)}...`);
-              const resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${m}:predict?key=${key}`, {
+              const apiVersion = (m.includes('exp') || m.includes('beta')) ? 'v1beta' : 'v1';
+              const resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/${apiVersion}/models/${m}:predict?key=${key}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

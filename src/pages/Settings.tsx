@@ -983,9 +983,7 @@ export default function Settings() {
                       <SelectContent>
                         {aiProvider === 'gemini' ? (
                           <>
-                            <SelectItem value="gemini-2.0-flash">Google Gemini 2.0 Flash (Rápido)</SelectItem>
-                            <SelectItem value="gemini-2.5-flash">Google Gemini 2.5 Flash (Mais Novo & Inteligente)</SelectItem>
-                            <SelectItem value="gemini-2.0-flash-lite">Google Gemini 2.0 Flash-Lite (Econômico)</SelectItem>
+                            <SelectItem value="gemini-2.0-flash">Google Gemini 2.0 Flash (Recomendado)</SelectItem>
                           </>
                         ) : (
                           <>
