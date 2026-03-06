@@ -139,9 +139,17 @@ class AIGateway {
       if (!key) continue;
 
       const models = p === 'gemini' ? this.gems : this.openais;
-      const currentModels = (preferredModel && preferredModel.includes(p === 'gemini' ? 'gemini' : 'gpt')) 
+      let currentModels = (preferredModel && preferredModel.includes(p === 'gemini' ? 'gemini' : 'gpt')) 
         ? [preferredModel, ...models] 
         : models;
+
+      // Force upgrade of legacy/problematic models for Gemini
+      if (p === 'gemini') {
+        currentModels = currentModels.map(m => {
+          if (m.includes('gemini-1.5') || m.includes('gemini-pro') || m === 'gemini-pro') return 'gemini-2.0-flash';
+          return m;
+        });
+      }
 
       for (const model of [...new Set(currentModels)]) {
         try {
@@ -152,15 +160,30 @@ class AIGateway {
           let resp;
           if (p === 'gemini') {
             // Usar v1 para modelos estáveis e v1beta apenas se for explicitamente experimental
-            const apiVersion = (model.includes('exp') || model.includes('beta')) ? 'v1beta' : 'v1';
-            resp = await fetchWithTimeout(`https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${key}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: `${system}\n\n${user}` }] }],
-                generationConfig: { temperature: 0.4, maxOutputTokens: 8000 }
-              })
-            });
+            let apiVersion = (model.includes('exp') || model.includes('beta')) ? 'v1beta' : 'v1';
+            
+            const makeRequest = async (v: string) => {
+              return await fetchWithTimeout(`https://generativelanguage.googleapis.com/${v}/models/${model}:generateContent?key=${key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: `${system}\n\n${user}` }] }],
+                  generationConfig: { temperature: 0.4, maxOutputTokens: 8000 }
+                })
+              });
+            };
+
+            resp = await makeRequest(apiVersion);
+            
+            // Auto-fallback if v1beta fails with Not Found (404/400)
+            if (!resp.ok && apiVersion === 'v1beta') {
+               const cloned = resp.clone();
+               const errData = await cloned.json().catch(() => ({}));
+               if (errData.error?.message?.includes('not found') || resp.status === 404) {
+                 console.log(`[AIGateway] Fallback to v1 for model ${model}`);
+                 resp = await makeRequest('v1');
+               }
+            }
           } else {
             resp = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
               method: 'POST',

@@ -1,0 +1,35 @@
+const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
+
+// read .env
+const envFiles = ['.env', '.env.local'];
+let env = {};
+envFiles.forEach(file => {
+    const filePath = path.join(process.cwd(), file);
+    if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf8');
+        content.split('\n').forEach(line => {
+            const idx = line.indexOf('=');
+            if (idx !== -1) {
+                env[line.substring(0, idx).trim()] = line.substring(idx + 1).trim().replace(/^"|"$/g, '');
+            }
+        });
+    }
+});
+
+const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function checkWL() {
+    const { data: wl, error } = await supabase.from('white_label_settings').select('organization_id, ai_model, ai_provider');
+    if (error) {
+        console.error('Error:', error);
+        return;
+    }
+    console.log('White Label Settings:', JSON.stringify(wl, null, 2));
+}
+
+checkWL();

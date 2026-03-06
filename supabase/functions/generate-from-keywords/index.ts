@@ -130,18 +130,39 @@ serve(async (req) => {
       const models = ['gemini-2.0-flash'];
       let lastErr = "";
       
-      for (const model of models) {
+      const requestedModels = (feed.ai_model && feed.ai_model.includes('gemini')) 
+        ? [feed.ai_model, ...models] 
+        : models;
+
+      // Force upgrade of legacy models
+      const finalModels = [...new Set(requestedModels.map(m => (m.includes('gemini-1.5') || m.includes('gemini-pro') || m === 'gemini-pro') ? 'gemini-2.0-flash' : m))];
+
+      for (const model of finalModels) {
         try {
           console.log(`[Generate] Trying Gemini model: ${model}`);
           const apiVersion = (model.includes('exp') || model.includes('beta')) ? 'v1beta' : 'v1';
-          const response = await fetch(`https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: `${systemPrompt}\n\nPalavras-chave: ${keywords}` }] }],
-              generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
-            }),
-          });
+          
+          const makeRequest = async (v: string) => {
+            return await fetch(`https://generativelanguage.googleapis.com/${v}/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: `${systemPrompt}\n\nPalavras-chave: ${keywords}` }] }],
+                generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
+              }),
+            });
+          };
+
+          let response = await makeRequest(apiVersion);
+
+          if (!response.ok && apiVersion === 'v1beta') {
+             const cloned = response.clone();
+             const errData = await cloned.json().catch(() => ({}));
+             if (errData.error?.message?.includes('not found') || response.status === 404) {
+               console.log(`[Generate] Fallback to v1 for model ${model}`);
+               response = await makeRequest('v1');
+             }
+          }
 
           if (!response.ok) {
             const err = await response.text();

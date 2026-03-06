@@ -42,7 +42,8 @@ import {
   Send,
   RefreshCw,
   Copy,
-  LogOut
+  LogOut,
+  Trash2
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -281,7 +282,9 @@ export default function Settings() {
   // Load settings from context
   useEffect(() => {
     if (wlSettings) {
-      setAiModel(wlSettings.ai_model || 'gemini-2.0-flash');
+      const model = wlSettings.ai_model || 'gemini-2.0-flash';
+      // Normalize to 2.0-flash if it's a legacy model
+      setAiModel((model.includes('gemini-1.5') || model.includes('gemini-pro') || model === 'gemini-pro') ? 'gemini-2.0-flash' : model);
       setAiProvider((wlSettings as any).ai_provider || 'gemini');
       setWritingTone(wlSettings.writing_tone || 'professional');
       setSystemPrompt(wlSettings.system_prompt || '');
@@ -450,7 +453,7 @@ export default function Settings() {
     }
 
     if (!value) {
-      toast.error("Por favor, insira uma chave válida");
+      handleDisconnect(platformId);
       return;
     }
 
@@ -492,6 +495,23 @@ export default function Settings() {
 
   const handleDisconnect = (platformId: string) => {
     disconnectPlatform.mutate(platformId);
+    
+    // Sync OpenAI images if it's the main OpenAI key
+    if (platformId === 'openai') {
+      disconnectPlatform.mutate('openai_images');
+    }
+
+    // Sync Gemini if it's the main google_gemini key
+    if (platformId === 'google_gemini') {
+      disconnectPlatform.mutate('gemini');
+    }
+
+    // Clear local state
+    setApiKeys(prev => {
+      const { [platformId]: _, ...rest } = prev;
+      return rest;
+    });
+    setIsEditingKey(prev => ({ ...prev, [platformId]: false }));
   };
 
 
@@ -854,6 +874,17 @@ export default function Settings() {
                       >
                         {getConnection('openai')?.isConnected && !isEditingKey['openai'] ? 'Trocar' : 'Salvar'}
                       </Button>
+                      {getConnection('openai')?.isConnected && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDisconnect('openai')}
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10 shrink-0"
+                          title="Remover Chave"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -928,6 +959,17 @@ export default function Settings() {
                       >
                         {getConnection('google_gemini')?.isConnected && !isEditingKey['google_gemini'] ? 'Trocar' : 'Salvar'}
                       </Button>
+                      {getConnection('google_gemini')?.isConnected && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDisconnect('google_gemini')}
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10 shrink-0"
+                          title="Remover Chave"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
