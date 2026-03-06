@@ -740,7 +740,7 @@ serve(async (req) => {
     const systemPrompt = `${basePrompt} 
       TONALIDADE: ${toneInstructions[item.feeds.writing_tone || 'journalistic']}
       ${item.feeds.custom_prompt ? `DIRETRIZES ADICIONAIS: ${item.feeds.custom_prompt}` : ''}
-      ${item.feeds.generate_highlights ? `\nDESTAQUES (TL;DR): No início do campo 'content', adicione um resumo em 3 bullet points curtos usando formatacao HTML: <b>Destaques:</b><ul><li>Ponto 1</li><li>...</li></ul><br/>` : ''}
+      ${item.feeds.generate_highlights ? `\nDESTAQUES (TL;DR): No início do campo 'content', adicione obrigatoriamente um resumo em exatos 3 bullet points curtos usando formatação HTML estrita: <b>Destaques:</b><ul><li>Ponto 1</li><li>Ponto 2</li><li>Ponto 3</li></ul><br/>` : ''}
 
       MISSÃO:
       Sua tarefa é transformar o conteúdo original em um artigo IRRESISTÍVEL de nível Premium.
@@ -756,9 +756,12 @@ serve(async (req) => {
       - Crie um título magnético (H1) que atraia cliques sem ser enganoso.
       - Título deve ser ÚNICO e ter no máximo 85 caracteres.
       - FORMATAÇÃO: OBRIGATÓRIO usar o padrão do jornalismo profissional brasileiro. Apenas a primeira letra da frase e nomes próprios devem ser maiúsculos (Sentence case). NUNCA capitalize a primeira letra de todas as palavras (PROIBIDO usar Title Case). Exemplo correto: "Brasil vence Venezuela e avança no torneio".
-      ESTRUTURA DE CONTEÚDO:
+
+      ESTRUTURA DE CONTEÚDO E HTML (CRÍTICO):
       - Use HTML semântico (<h2>, <h3>, <b>, <ul>, <li>).
       - Divida o texto em parágrafos curtos para facilitar a leitura.
+      - **REGRA DE NEGRITO**: Use a tag <b> ou <strong> apenas para termos curtos, nomes ou datas isoladas. NUNCA coloque parágrafos inteiros ou frases longas em negrito.
+      - **FECHAMENTO DE TAGS**: Todas as tags HTML abertas (<b>, <p>, <ul>) devem ser obrigatoriamente fechadas antes do próximo bloco.
       - Enriqueça o texto com informações relevantes caso o original seja muito curto.
       - OBRIGATÓRIO: Se o texto original contiver créditos de imagem (ex: "Foto: Nome", "Crédito: Nome", "Imagem: Nome"), mantenha-os INTACTOS e adicione-os no final do seu artigo formatados em itálico.
 

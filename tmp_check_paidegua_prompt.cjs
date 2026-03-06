@@ -23,12 +23,15 @@ const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_SERVICE_R
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function checkPrompt() {
-    const orgId = 'af69f2c0-8a88-4201-84ca-faf3c924cf46';
-    const { data: wl } = await supabase.from('white_label_settings').select('system_prompt').eq('organization_id', orgId).single();
+async function checkOrgPrompt() {
+    const orgId = 'da798a65-d3b2-4423-a23c-6bdee3039a87';
+    const { data: wl } = await supabase.from('white_label_settings').select('*, organizations(name)').eq('organization_id', orgId).single();
     if (wl) {
-        fs.writeFileSync('tmp_paidegua_full_prompt.txt', wl.system_prompt, 'utf8');
+        console.log("Org:", wl.organizations.name);
+        console.log("Prompt Mode:", wl.prompt_mode);
+        console.log("System Prompt:", wl.system_prompt);
+        fs.writeFileSync('tmp_paidegua_full_prompt.txt', wl.system_prompt || '', 'utf8');
     }
 }
 
-checkPrompt();
+checkOrgPrompt();

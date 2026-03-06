@@ -23,18 +23,18 @@ const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_SERVICE_R
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function findLucro() {
+async function findMatch() {
     const { data: items } = await supabase.from('feed_items')
-        .select('id, rewritten_content, rewritten_title')
-        .ilike('rewritten_title', '%15,5%')
+        .select('*')
+        .ilike('rewritten_content', '%Aumento de 10,4% em relação ao ano anterior%')
         .limit(1);
 
     if (items && items.length > 0) {
         console.log("Found item:", items[0].id);
-        fs.writeFileSync('tmp_lucro_content.html', items[0].rewritten_content, 'utf8');
+        fs.writeFileSync('tmp_exact_caixa_content.html', items[0].rewritten_content, 'utf8');
     } else {
         console.log("Not found");
     }
 }
 
-findLucro();
+findMatch();

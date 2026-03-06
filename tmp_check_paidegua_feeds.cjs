@@ -23,18 +23,12 @@ const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_SERVICE_R
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function findLucro() {
-    const { data: items } = await supabase.from('feed_items')
-        .select('id, rewritten_content, rewritten_title')
-        .ilike('rewritten_title', '%15,5%')
-        .limit(1);
-
-    if (items && items.length > 0) {
-        console.log("Found item:", items[0].id);
-        fs.writeFileSync('tmp_lucro_content.html', items[0].rewritten_content, 'utf8');
-    } else {
-        console.log("Not found");
+async function checkFeed() {
+    const orgId = 'da798a65-d3b2-4423-a23c-6bdee3039a87';
+    const { data: feeds } = await supabase.from('feeds').select('*').eq('organization_id', orgId);
+    if (feeds) {
+        fs.writeFileSync('tmp_paidegua_feeds.txt', JSON.stringify(feeds, null, 2), 'utf8');
     }
 }
 
-findLucro();
+checkFeed();
