@@ -79,7 +79,8 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
 
     const { connectedPlatforms } = usePlatformSettings();
     const [showSocialShare, setShowSocialShare] = useState(false);
-    const connectedSocials = connectedPlatforms.filter(p => p.platform_id !== 'wordpress');
+    const publishingDestinations = connectedPlatforms.filter(p => !['gemini', 'google_gemini', 'openai', 'openai_images', 'nano_banana', 'serper'].includes(p.platform_id));
+    const connectedSocials = publishingDestinations.filter(p => p.platform_id !== 'wordpress');
 
     // Quick Edit Mode States
     const [isQuickEditing, setIsQuickEditing] = useState(false);
@@ -539,7 +540,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                                     Editar
                                 </Button>
 
-                                {connectedPlatforms.length > 1 ? (
+                                {publishingDestinations.length > 1 ? (
                                     <div className="flex">
                                         <Button
                                             size="sm"
@@ -567,7 +568,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                                             <DropdownMenuContent align="end" className="w-56 bg-zinc-950 border-white/10 text-white">
                                                 <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Escolher Destino</div>
                                                 <DropdownMenuSeparator className="bg-white/5" />
-                                                {connectedPlatforms.map(platform => (
+                                                {publishingDestinations.map(platform => (
                                                     <DropdownMenuItem
                                                         key={platform.platform_id}
                                                         onClick={(e) => { e.stopPropagation(); handleQuickApprove(platform.platform_id); }}
@@ -1043,7 +1044,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                                 {(item.status as string) === 'ready' ? 'Publicar Tudo' : (isQuickEditing ? 'Salvar e Aprovar' : 'Aprovar')}
                             </span>
                         </Button>
-                        {connectedPlatforms.length > 0 && (
+                        {publishingDestinations.length > 0 && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-14 w-12 rounded-xl border-white/5 bg-white/5 text-white">
@@ -1053,7 +1054,7 @@ export function RewrittenItemCard({ item, onApprove, onReject, onEdit, onRewrite
                                 <DropdownMenuContent align="end" className="w-64 bg-zinc-950 border-white/10 text-white p-2">
                                     <div className="px-2 py-2 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Destinos Disponíveis</div>
                                     <DropdownMenuSeparator className="bg-white/5" />
-                                    {connectedPlatforms.map(platform => (
+                                    {publishingDestinations.map(platform => (
                                         <DropdownMenuItem
                                             key={platform.platform_id}
                                             onClick={() => handleQuickApprove(platform.platform_id)}
