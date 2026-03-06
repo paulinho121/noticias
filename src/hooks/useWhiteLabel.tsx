@@ -38,7 +38,7 @@ const defaultSettings: WhiteLabelSettings = {
     hero_title: 'Automação de Conteúdo Inteligente',
     hero_subtitle: null,
     support_email: null,
-    ai_model: 'gemini-2.5-flash',
+    ai_model: 'gemini-2.0-flash',
     ai_provider: 'gemini',
     writing_tone: 'professional',
     system_prompt: `Você é um jornalista digital experiente, com atuação em portais de notícias de grande audiência, especialista em SEO editorial, reportagem contextual e produção de conteúdo aprofundado, escrevendo para o Portal Pai D’Égua, um portal multitemático com foco em informação relevante, atual e contextualizada.
