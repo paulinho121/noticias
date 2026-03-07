@@ -118,6 +118,43 @@ serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (platformId === 'custom_api') {
+      const { webhook_url, auth_header } = finalCredentials;
+      if (!webhook_url) throw new Error('URL do Webhook não configurada.');
+
+      console.log(`[TestConnection] Testando Webhook Customizado: ${webhook_url}`);
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (auth_header && auth_header.includes(':')) {
+        const [key, ...valueParts] = auth_header.split(':');
+        headers[key.trim()] = valueParts.join(':').trim();
+      } else if (auth_header) {
+        headers['Authorization'] = auth_header.trim();
+      }
+
+      const response = await fetch(webhook_url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          event: 'test_connection',
+          timestamp: new Date().toISOString(),
+          message: 'Este é um teste de conexão do ContentAI.'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha no Webhook: ${response.status} ${response.statusText}`);
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Conexão com o Site Externo validada com sucesso! O Webhook respondeu corretamente.' 
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Default response
     return new Response(JSON.stringify({ success: true, message: 'Configurações salvas e validadas.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 

@@ -932,7 +932,7 @@ serve(async (req) => {
        const targetPlatform = item.feeds.target_platform || 'wordpress';
        console.log(`[RewriteEngine] Triggering auto-publish for: ${feedItemId} to platform: ${targetPlatform}`);
        
-       if (targetPlatform === 'wordpress' || targetPlatform === 'blogger' || targetPlatform === 'wix') {
+       if (targetPlatform === 'wordpress' || targetPlatform === 'blogger' || targetPlatform === 'wix' || targetPlatform === 'custom_api') {
            const publishEndpoint = `publish-to-${targetPlatform}`;
            fetch(`${supabaseUrl}/functions/v1/${publishEndpoint}`, {
               method: 'POST',

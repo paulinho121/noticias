@@ -80,7 +80,7 @@ serve(async (req) => {
 
     if (imageUrl) {
         let creditsHtml = '';
-        if (item.feeds.credit_source && item.feeds.image_credit_text) {
+        if (item.feeds.credit_source && item.feeds.image_credit_text && item.feeds.image_credit_text.trim() !== '') {
           creditsHtml = `<p style="font-size: 10px; color: #666; font-style: italic; margin-top: 5px; margin-bottom: 20px;">Créditos da imagem: ${item.feeds.image_credit_text}</p>`;
         }
         content = `<img src="${imageUrl}" style="max-width:100%; height:auto; margin-bottom:5px;" />\n${creditsHtml}\n<br/>${content}`;

@@ -541,12 +541,12 @@ export default function Settings() {
     }
   };
 
-  const handleTest = async (platformId: string) => {
+  const handleTest = async (platformId: string, customCredentials?: Record<string, string>) => {
     // Use a chave digitada se estiver em edição, senão use a salva
-    let testCredentials = getConnection(platformId)?.credentials;
+    let testCredentials = customCredentials || getConnection(platformId)?.credentials;
     const currentInput = apiKeys[platformId];
 
-    if (isEditingKey[platformId]) {
+    if (isEditingKey[platformId] && !customCredentials) {
       if (!currentInput) {
         toast.error('Informe a chave no campo antes de testar.');
         return;
@@ -554,8 +554,8 @@ export default function Settings() {
       testCredentials = { api_key: currentInput };
     }
 
-    if (!testCredentials || !testCredentials.api_key) {
-      toast.error('Nenhuma chave ativa para testar.');
+    if (!testCredentials || Object.keys(testCredentials).length === 0) {
+      toast.error('Informe as credenciais antes de testar.');
       return;
     }
 

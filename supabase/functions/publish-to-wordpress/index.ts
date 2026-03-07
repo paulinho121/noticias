@@ -221,7 +221,7 @@ serve(async (req) => {
     }
 
     // Adicionar Créditos de Imagem se houver
-    if (feed.credit_source && feed.image_credit_text) {
+    if (feed.credit_source && feed.image_credit_text && feed.image_credit_text.trim() !== '') {
       const creditsHtml = `<p style="font-size: 11px; color: #666; font-style: italic; margin-top: 5px; margin-bottom: 20px;">Créditos da imagem: ${feed.image_credit_text}</p>`;
       cleanContent = `${creditsHtml}\n${cleanContent}`;
     }

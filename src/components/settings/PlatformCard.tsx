@@ -53,7 +53,7 @@ interface PlatformCardProps {
   connection?: PlatformConnection;
   onConnect: (platformId: string, credentials: Record<string, string>, isAutoPublish: boolean) => void;
   onDisconnect: (platformId: string) => void;
-  onTest: (platformId: string) => void;
+  onTest: (platformId: string, credentials?: Record<string, string>) => void;
 }
 
 export function PlatformCard({
@@ -86,6 +86,14 @@ export function PlatformCard({
     setIsTesting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
     onTest(platform.id);
+    setIsTesting(false);
+  };
+
+  const handleTestInModal = async () => {
+    setIsTesting(true);
+    // Simular delay visual para feedback
+    await new Promise(resolve => setTimeout(resolve, 800));
+    onTest(platform.id, credentials);
     setIsTesting(false);
   };
 
@@ -325,6 +333,17 @@ export function PlatformCard({
               )}
             </Button>
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleTestInModal}
+                disabled={isTesting}
+                className="gap-2"
+              >
+                {isTesting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : <Zap className="w-3.5 h-3.5 text-primary" />}
+                Testar Conexão
+              </Button>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
