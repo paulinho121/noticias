@@ -35,4 +35,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: ./public_html/
-          delete-destination: false # Evita deletar arquivos que não estão no repo
+
