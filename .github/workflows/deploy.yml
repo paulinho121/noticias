@@ -35,6 +35,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: ./public_html/
+          # Forçar novo deploy: 07-03-2026 14:22
+
 
 
 
